@@ -367,7 +367,8 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-coins = ["DMD", "EBST", "EGC", "EXCL", "FAIR"]
+#coins = ["ETC", "BNT", "FLDC", "ARDR", "2GIVE", "EGC", "BRX", "BTG", "ARK", "AUR", "EBST", "EGC"]
+coins = ["ANT", "BSD", "BNT", "ARDR", "2GIVE", "ABY", "BRX", "BTG", "ARK", "AUR","AEON", "CLAM"]
 #coins = ["AMP", "ANT", "ARDR", "ARK", "AUR"]
 #coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
 
@@ -375,7 +376,7 @@ training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
 lstm_layers = [40,40]
-epochs = 100
+epochs=50
 price_col=8
 batch_size=1800
 label_min=0
@@ -388,7 +389,7 @@ strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file="results.csv"
+results_file="results_sample.csv"
 
 f = csv.writer(open(results_file, "w"))
 f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1", "sg_test2", "nb_test2"])
@@ -478,7 +479,7 @@ for coin in coins:
 
     
     #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
-    method_params={"method":"pct_gt", "thresh":0.75, "label_gt":3}
+    method_params={"method":"pct_gt", "thresh":0.6, "label_gt":3}
 
     if timesteps > 1:
         x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
