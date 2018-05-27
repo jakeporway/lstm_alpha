@@ -3,6 +3,7 @@
 import math
 import sys
 import numpy as np
+import yaml
 from numpy import concatenate
 from matplotlib import pyplot
 import pandas as pd
@@ -367,180 +368,184 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-#coins = ["AMP", "ANT", "ARDR", "ARK", "AUR"]
+coins = ["AMP", "ANT"]
 #coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
 
 training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
-lstm_layers = [40,40]
-epochs = 100
-price_col=8
-batch_size=1800
 label_min=0
-label_max=15
 timesteps=1
 do_training=True
-cutoff = 0.95
+price_col=8
+cutoff=0.95
 
-strategy = {}
-strategy["pct_gain"]=0.15
-strategy["pct_loss"]=100
-strategy["days_to_hold"]=4
-results_file="results.csv"
+config_file = yaml.load(open("lstm.yaml", "r"))
 
-f = csv.writer(open(results_file, "w"))
-f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1", "sg_test2", "nb_test2"])
+for c in config_file["configs"]:
+    print("\n--- Learning models with params: ---")
+    print(str(c))
+    lstm_layers = c["lstm_layers"]
+    epochs = c["epochs"]
+    batch_size = c["batch_size"]
+    buy_thresh = c["buy_thresh"]
+    label_max = c["label_max"]
+    label_gt = c["label_gt"]
+    strategy = c["strategy"]
+    results_file = c["model"]+"_results.csv"
+  
+    f = csv.writer(open(results_file, "w"))
+    f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1", "sg_test2", "nb_test2"])
 
-for coin in coins:
-    
-    csvrow = []
-    csvrow.append(coin)
+    for coin in coins:
+        
+        csvrow = []
+        csvrow.append(coin)
 
-    print("\n-=-=-=-=- " + coin + " -=-=-=-=-")
-    if coin == "" or len(sys.argv) > 1:
-        coin = str(sys.argv[1])
+        print("\n-=-=-=-=- " + coin + " -=-=-=-=-")
+        if coin == "" or len(sys.argv) > 1:
+            coin = str(sys.argv[1])
 
-    
-    print("-- Loading data")
-    (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(coin, training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
+        
+        print("-- Loading data")
+        (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(coin, training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
-    if (train_X.shape[0]==1):
-        print("No training data found. Skipping")
-        continue
+        if (train_X.shape[0]==1):
+            print("No training data found. Skipping")
+            continue
 
-    if do_training:
-        print("-- Training model")
-        (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, "figs/"+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
+        if do_training:
+            print("-- Training model")
+            (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, "figs/"+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
 
-        # Test saving the model
-        model_json = model.to_json()
-        with open(coin+"_model.json", "w") as json_file:
-            json_file.write(model_json)
-        # serialize weights to HDF5
-        model.save_weights(coin+"_model.h5")
-        print("Saved model to disk")
+            # Test saving the model
+            model_json = model.to_json()
+            with open(coin+"_model.json", "w") as json_file:
+                json_file.write(model_json)
+            # serialize weights to HDF5
+            model.save_weights(coin+"_model.h5")
+            print("Saved model to disk")
 
-        scaler_filename = coin+"_scaler.save"
-        joblib.dump(scaler, scaler_filename)
-    else:
-        json_file = open(coin+'_model.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
-        # load weights into new model
-        loaded_model.load_weights(coin+"_model.h5")
-        print("Loaded model from disk")
-        scaler_filename = coin+"_scaler.save"
-        scaler = joblib.load(scaler_filename) 
+            scaler_filename = coin+"_scaler.save"
+            joblib.dump(scaler, scaler_filename)
+        else:
+            json_file = open(coin+'_model.json', 'r')
+            loaded_model_json = json_file.read()
+            json_file.close()
+            loaded_model = model_from_json(loaded_model_json)
+            # load weights into new model
+            loaded_model.load_weights(coin+"_model.h5")
+            print("Loaded model from disk")
+            scaler_filename = coin+"_scaler.save"
+            scaler = joblib.load(scaler_filename) 
 
-    # Compress test_y back into a single number (undo one-hot)
-    test_y = np.argmax(test_y, axis=1)
+        # Compress test_y back into a single number (undo one-hot)
+        test_y = np.argmax(test_y, axis=1)
 
-    print("-- Predicting")
-    (yhat_raw, yhat) = predict(model, scaler, test_X, test_y, timesteps, n_col)
+        print("-- Predicting")
+        (yhat_raw, yhat) = predict(model, scaler, test_X, test_y, timesteps, n_col)
 
-    if timesteps > 1:
-        x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
-    else:
-        x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
+        if timesteps > 1:
+            x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
+        else:
+            x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
-    print("-- Plotting")
-    plot_predictions(x2, test_y, yhat_raw, yhat, "figs/"+coin+"_1_validation_graphs.png", "figs/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        print("-- Plotting")
+        plot_predictions(x2, test_y, yhat_raw, yhat, "figs/"+coin+"_1_validation_graphs.png", "figs/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
 
-    (results, baseline) = compute_accuracy(np.average(yhat_raw, axis=1, weights=range(label_min, label_max)), test_y, 100)
+        (results, baseline) = compute_accuracy(np.average(yhat_raw, axis=1, weights=range(label_min, label_max)), test_y, 100)
 
-    best_improve = np.argmax(results[:,2])
-    best_num = np.argmax(results[:,4])
+        best_improve = np.argmax(results[:,2])
+        best_num = np.argmax(results[:,4])
 
-    # There are a couple of ways to choose the best threshold. Right now
-    # I'm trying to find definitive thresholds, so I'm just going to go
-    # with the biggest number of points above a threshold of 95% accuracy.
-    # If there are none, we'll not predict this coin
-    
-    best = np.argwhere(results[:,1]>cutoff)
-    classification_threshold = 0
-    if (len(best)==0):
-        best_row = results[np.argmax(results[:,1]),:]
-        print("No threshold yieled more than " + str(cutoff))
-        best_row[0]=100000
-        print("Selecting " + str(best_row[0]) + " with accuracy " + str(best_row[1]) + " instead, an improvement of " + str(best_row[2]))
-    else:
-        best_row=results[best[np.argmax(results[best,3])],:]
-        best_row=best_row[0,:]
-        print("Selecting " + str(best_row[0]) + " with accuracy " + str(best_row[1]) + ", an improvement of " + str(best_row[2]))
-    final_threshold = best_row[0]
+        # There are a couple of ways to choose the best threshold. Right now
+        # I'm trying to find definitive thresholds, so I'm just going to go
+        # with the biggest number of points above a threshold of 95% accuracy.
+        # If there are none, we'll not predict this coin
+        
+        best = np.argwhere(results[:,1]>cutoff)
+        classification_threshold = 0
+        if (len(best)==0):
+            best_row = results[np.argmax(results[:,1]),:]
+            print("No threshold yieled more than " + str(cutoff))
+            best_row[0]=100000
+            print("Selecting " + str(best_row[0]) + " with accuracy " + str(best_row[1]) + " instead, an improvement of " + str(best_row[2]))
+        else:
+            best_row=results[best[np.argmax(results[best,3])],:]
+            best_row=best_row[0,:]
+            print("Selecting " + str(best_row[0]) + " with accuracy " + str(best_row[1]) + ", an improvement of " + str(best_row[2]))
+        final_threshold = best_row[0]
 
-    #f.write(coin + "\n")
-    #f.write("threshold: " + str(best_row[0]) + ", " + str(best_row[1]) + ", " + str(best_row[2]) + ", " + str(best_row[3]) + "\n")
-    csvrow.append(best_row[0])
+        #f.write(coin + "\n")
+        #f.write("threshold: " + str(best_row[0]) + ", " + str(best_row[1]) + ", " + str(best_row[2]) + ", " + str(best_row[3]) + "\n")
+        csvrow.append(best_row[0])
 
-    
-    #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
-    method_params={"method":"pct_gt", "thresh":0.75, "label_gt":3}
+        
+        #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
+        method_params={"method":"pct_gt", "thresh":buy_thresh, "label_gt":label_gt}
 
-    if timesteps > 1:
-        x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
-    else:
-        x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
-
-
-    (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, "figs/"+coin+"_2_validation_buys.png", strategy, method_params=method_params)
-
-    print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
-    #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
-    csvrow.extend([sum(pg), len(pg)])
-
-    print("-- Running on test 1 data")
-    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
-    if (test_X2.shape[0]==1):
-        print("No testing data found for this coin. Skipping.")
-    #    continue
+        if timesteps > 1:
+            x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
+        else:
+            x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
 
-    if timesteps > 1:
-        x2 = test_X2.reshape((test_X2.shape[0], timesteps, n_col))
-    else:
-        x2 = test_X2.reshape((test_X2.shape[0], test_X2.shape[2]))
+        (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, "figs/"+coin+"_2_validation_buys.png", strategy, method_params=method_params)
 
-    print("-- Plotting")
-    plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs/"+coin+"_3_test1_graphs.png", "figs/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
-    #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
-    #print("++ Test set 1: pct good: " + str(pct_good) + " Num good: " + str(num_good))
-    #f.write("++ Test set 1:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
+        print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
+        #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
+        csvrow.extend([sum(pg), len(pg)])
 
-    (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, "figs/"+coin+"_4_test1_buys.png", strategy, method_params=method_params)
-    print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
-    #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
-    csvrow.extend([sum(pg), len(pg)])
-
-    print("-- Running on test 2 data")
-    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
-    if (test_X3.shape[0]==1):
-        print("No testing data found for this coin. Skipping.")
-    #   continue
-
-    if timesteps > 1:
-        x3 = test_X3.reshape((test_X3.shape[0], timesteps, n_col))
-    else:
-        x3 = test_X3.reshape((test_X3.shape[0], test_X3.shape[2]))
+        print("-- Running on test 1 data")
+        (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
+        if (test_X2.shape[0]==1):
+            print("No testing data found for this coin. Skipping.")
+        #    continue
 
 
-    print("-- Plotting")
-    plot_predictions(x3, test_y3, yhat_raw3, yhat3, "figs/"+coin+"_5_test2_graphs.png", "figs/"+coin+"_6_test2_correlations.png", price_col=2, label_min=label_min, label_max=label_max)
-    #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
-    #print("++ Test set 2: pct good: " + str(pct_good) + " Num good: " + str(num_good))
-    #f.write("++ Test set 2:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
-    
-    (bi, si, pg) = buy(x3, yhat_raw3, price_col, scaler, "figs/"+coin+"_6_test2_buys.png", strategy, method_params=method_params)
-    print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
-    #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
-    csvrow.extend([sum(pg), len(pg)])
-    f.writerow(csvrow)
+        if timesteps > 1:
+            x2 = test_X2.reshape((test_X2.shape[0], timesteps, n_col))
+        else:
+            x2 = test_X2.reshape((test_X2.shape[0], test_X2.shape[2]))
 
-    print("-- Done.")
+        print("-- Plotting")
+        plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs/"+coin+"_3_test1_graphs.png", "figs/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
+        #print("++ Test set 1: pct good: " + str(pct_good) + " Num good: " + str(num_good))
+        #f.write("++ Test set 1:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
 
-del f
+        (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, "figs/"+coin+"_4_test1_buys.png", strategy, method_params=method_params)
+        print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
+        #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
+        csvrow.extend([sum(pg), len(pg)])
+
+        print("-- Running on test 2 data")
+        (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
+        if (test_X3.shape[0]==1):
+            print("No testing data found for this coin. Skipping.")
+        #   continue
+
+        if timesteps > 1:
+            x3 = test_X3.reshape((test_X3.shape[0], timesteps, n_col))
+        else:
+            x3 = test_X3.reshape((test_X3.shape[0], test_X3.shape[2]))
+
+
+        print("-- Plotting")
+        plot_predictions(x3, test_y3, yhat_raw3, yhat3, "figs/"+coin+"_5_test2_graphs.png", "figs/"+coin+"_6_test2_correlations.png", price_col=2, label_min=label_min, label_max=label_max)
+        #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
+        #print("++ Test set 2: pct good: " + str(pct_good) + " Num good: " + str(num_good))
+        #f.write("++ Test set 2:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
+        
+        (bi, si, pg) = buy(x3, yhat_raw3, price_col, scaler, "figs/"+coin+"_6_test2_buys.png", strategy, method_params=method_params)
+        print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
+        #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
+        csvrow.extend([sum(pg), len(pg)])
+        f.writerow(csvrow)
+
+        print("-- Done.")
+
+    del f
 
 
 #9745630508
