@@ -367,8 +367,6 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-#coins = ["ETC", "BNT", "FLDC", "ARDR", "2GIVE", "EGC", "BRX", "BTG", "ARK", "AUR", "EBST", "EGC"]
-coins = ["ANT", "BSD", "BNT", "ARDR", "2GIVE", "ABY", "BRX", "BTG", "ARK", "AUR","AEON", "CLAM"]
 #coins = ["AMP", "ANT", "ARDR", "ARK", "AUR"]
 #coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
 
