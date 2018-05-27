@@ -1,0 +1,45 @@
+configs:
+  - model: "baseline"
+    lstm_layers: [40,40]
+    epochs: 50
+    batch_size: 1800
+    label_max: 15
+    buy_thresh: 0.75
+    label_gt: 3
+    strategy:
+        pct_gain: 0.15
+        pct_loss: 100
+        days_to_hold: 4
+  - model: "40_20_lstm"
+    lstm_layers: [40,20]
+    epochs: 50
+    batch_size: 1800
+    label_max: 15
+    buy_thresh: 0.75
+    label_gt: 3
+    strategy:
+        pct_gain: 0.15
+        pct_loss: 100
+        days_to_hold: 4
+  - model: "40_100_lstm"
+    lstm_layers: [40,100]
+    epochs: 50
+    batch_size: 1800
+    label_max: 15
+    buy_thresh: 0.75
+    label_gt: 3
+    strategy:
+        pct_gain: 0.15
+        pct_loss: 100
+        days_to_hold: 4
+  - model: "40_40_100_lstm"
+    lstm_layers: [40,40,100]
+    epochs: 50
+    batch_size: 1800
+    label_max: 15
+    buy_thresh: 0.75
+    label_gt: 3
+    strategy:
+        pct_gain: 0.15
+        pct_loss: 100
+        days_to_hold: 4
