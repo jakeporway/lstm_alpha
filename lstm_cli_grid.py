@@ -368,7 +368,8 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-coins = ["AMP", "ANT"]
+#coins = ["AMP", "ANT"]
+coins = ["ANT", "BNT", "2GIVE", "BRX", "ARK", "AUR"]
 #coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
 
 training_filename = "_training_through_feb.csv"
