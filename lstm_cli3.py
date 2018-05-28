@@ -383,13 +383,13 @@ label_max=15
 timesteps=1
 do_training=False
 cutoff = 0.95
-method_thresh=0.75
+method_thresh=0.8
 
 strategy = {}
 strategy["pct_gain"]=0.15
-strategy["pct_loss"]=100
+strategy["pct_loss"]=0.3
 strategy["days_to_hold"]=4
-results_file_base="predict_results.csv"
+results_file_base="predict_stoploss_0.3_results.csv"
 
 counter=0
 results_file=str(counter)+"-"+results_file_base
