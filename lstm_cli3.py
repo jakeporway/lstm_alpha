@@ -490,8 +490,6 @@ for coin in coins:
         print("Selecting " + str(best_row[0]) + " with accuracy " + str(best_row[1]) + ", an improvement of " + str(best_row[2]))
     final_threshold = best_row[0]
 
-    #f.write(coin + "\n")
-    #f.write("threshold: " + str(best_row[0]) + ", " + str(best_row[1]) + ", " + str(best_row[2]) + ", " + str(best_row[3]) + "\n")
     csvrow.append(best_row[0])
 
     
