@@ -4,9 +4,10 @@ source("core_pump_library.R")
 source("utility_file.R")
 
 days_to_lookback=8
-#end.time <- as.integer(Sys.time())
-end.time <- 1527424200-4*24*3600
+end.time <- as.integer(Sys.time())
+#end.time <- 1527424200-4*24*3600
 start.time <- end.time-24*3600*days_to_lookback
+
 root_path="prediction_data/"
 filename="_predict.csv"
 
