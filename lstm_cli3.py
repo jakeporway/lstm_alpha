@@ -369,8 +369,8 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
 
 
-training_directory = "training_data/"
-model_directory = "models/"
+training_path = "training_data/"
+model_path = "models/"
 training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
@@ -411,7 +411,7 @@ for coin in coins:
 
     
     print("-- Loading data")
-    (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_directory+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
+    (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_path+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
     if (train_X.shape[0]==0):
         print("No training data found. Skipping")
@@ -423,24 +423,35 @@ for coin in coins:
 
         # Test saving the model
         model_json = model.to_json()
-        with open(model_directory+coin+"_model.json", "w") as json_file:
+        with open(model_path+coin+"_model.json", "w") as json_file:
             json_file.write(model_json)
         # serialize weights to HDF5
-        model.save_weights(model_directory+coin+"_model.h5")
+        model.save_weights(model_path+coin+"_model.h5")
         print("Saved model to disk")
 
-        scaler_filename = model_directory+coin+"_scaler.save"
+        scaler_filename = model_path+coin+"_scaler.save"
         joblib.dump(scaler, scaler_filename)
     else:
-        json_file = open(model_directory+coin+'_model.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
+        json_file = model_path+coin+'_model.json'
+        weights_file = model_path+coin+'_model.h5'
+        scaler_file = model_path+coin+"_scaler.save"
+        if not os.path.isfile(json_file):
+            print("Couldn't find model file for " + coin)
+            continue
+        if not os.path.isfile(weights_file):
+            print("Couldn't find weights file for " + coin)
+            continue
+        if not os.path.isfile(scaler_file):
+            print("Couldn't find scaler file for " + coin)
+            continue
+        jsonf = open(json_file, 'r')
+        loaded_model_json = jsonf.read()
+        jsonf.close()
         model = model_from_json(loaded_model_json)
         # load weights into new model
-        model.load_weights(model_directory+coin+"_model.h5")
-        print("Loaded model from disk")
-        scaler_filename = model_directory+coin+"_scaler.save"
-        scaler = joblib.load(scaler_filename) 
+        model.load_weights(weights_file)
+        print("Loaded model from disk for " + coin)
+        scaler = joblib.load(scaler_file) 
 
     # Compress test_y back into a single number (undo one-hot)
     test_y = np.argmax(test_y, axis=1)
@@ -504,7 +515,7 @@ for coin in coins:
     (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==0):
 =======
-    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_directory+coin+test1_filename, scaler, model, n_in=timesteps)
+    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_path+coin+test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==1):
 >>>>>>> e35a8534fcb5bfaff95266fcf9524d8cd09c0a38
         print("No testing data found for this coin. Skipping.")
@@ -532,7 +543,7 @@ for coin in coins:
     (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
     if (test_X3.shape[0]==0):
 =======
-    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(training_directory+coin+test2_filename, scaler, model, n_in=timesteps)
+    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(training_path+coin+test2_filename, scaler, model, n_in=timesteps)
     if (test_X3.shape[0]==1):
 >>>>>>> e35a8534fcb5bfaff95266fcf9524d8cd09c0a38
         print("No testing data found for this coin. Skipping.")
