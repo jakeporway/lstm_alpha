@@ -367,7 +367,7 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-
+coins = ["2GIVE", "ARK", "IOP", "DOGE", "EXCL"]
 
 training_path = "training_data/"
 model_path = "models/"
@@ -375,7 +375,7 @@ training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
 lstm_layers = [100,100]
-epochs=5
+epochs=50
 price_col=8
 batch_size=450
 label_min=0
@@ -389,7 +389,7 @@ strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file_base="results_full.csv"
+results_file_base="predict_results.csv"
 
 counter=0
 results_file=str(counter)+"-"+results_file_base
@@ -397,6 +397,7 @@ while os.path.isfile(results_file):
     counter=counter+1
     results_file=str(counter)+"-"+results_file_base
 
+print("++ Writing results to " + results_file)
 f = csv.writer(open(results_file, "w"))
 f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1", "sg_test2", "nb_test2"])
 
@@ -512,7 +513,7 @@ for coin in coins:
 
     print("-- Running on test 1 data")
 
-    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
+    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_path+coin+test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
@@ -535,7 +536,7 @@ for coin in coins:
 
     print("-- Running on test 2 data")
 
-    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
+    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(training_path+coin+test2_filename, scaler, model, n_in=timesteps)
     if (test_X3.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
