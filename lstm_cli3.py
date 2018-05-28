@@ -412,7 +412,7 @@ for coin in coins:
     print("-- Loading data")
     (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(coin, training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
-    if (train_X.shape[0]==1):
+    if (train_X.shape[0]==0):
         print("No training data found. Skipping")
         continue
 
@@ -500,9 +500,9 @@ for coin in coins:
 
     print("-- Running on test 1 data")
     (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
-    if (test_X2.shape[0]==1):
+    if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
-    #    continue
+        continue
 
 
     if timesteps > 1:
@@ -523,9 +523,9 @@ for coin in coins:
 
     print("-- Running on test 2 data")
     (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
-    if (test_X3.shape[0]==1):
+    if (test_X3.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
-    #   continue
+        continue
 
     if timesteps > 1:
         x3 = test_X3.reshape((test_X3.shape[0], timesteps, n_col))
