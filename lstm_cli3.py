@@ -477,7 +477,7 @@ for coin in coins:
 
     
     #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
-    method_params={"method":"pct_gt", "thresh":0.75, "label_gt":3}
+    method_params={"method":"pct_gt", "thresh":0.6, "label_gt":3}
 
     if timesteps > 1:
         x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
