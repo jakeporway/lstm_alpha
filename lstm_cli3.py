@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import math
+import os, os.path
 import sys
 import numpy as np
 from numpy import concatenate
@@ -16,7 +17,6 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
-from numpy import array
 from numpy import argmax
 from keras.utils import to_categorical
 from keras.models import model_from_json
@@ -59,7 +59,7 @@ def load_training_set(coin, extension, label_min, label_max, n_in=1, n_out=0, la
     reframed = series_to_supervised(values, n_in, n_out, lag)
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
-        null = np.zeros((1,1))
+        null = np.zeros((0))
         return (null, null, null, null, null)
 
 
@@ -208,7 +208,7 @@ def run_on_test_data(coin, wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     reframed = series_to_supervised(values, n_in, n_out, lag)
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
-        null = np.zeros((1,1))
+        null = np.zeros((0))
         return (null, null, null, null)
 
     nn = reframed.columns
@@ -367,16 +367,17 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
+coins = [ "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
 #coins = ["AMP", "ANT", "ARDR", "ARK", "AUR"]
 #coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
 
 training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
-lstm_layers = [40,40]
+lstm_layers = [100,100]
 epochs=50
 price_col=8
-batch_size=1800
+batch_size=450
 label_min=0
 label_max=15
 timesteps=1
@@ -387,7 +388,13 @@ strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file="results_sample.csv"
+results_file_base="results_full.csv"
+
+counter=0
+results_file=str(counter)+"-"+results_file_base
+while os.path.isfile(results_file):
+    counter=counter+1
+    results_file=str(counter)+"-"+results_file_base
 
 f = csv.writer(open(results_file, "w"))
 f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1", "sg_test2", "nb_test2"])
