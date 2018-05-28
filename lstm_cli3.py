@@ -49,9 +49,9 @@ def series_to_supervised(data, n_in=1, n_out=1, lag=1, dropnan=True):
     return agg
 
 # Load a CSV of training and validation data. The predictor must be the last column
-def load_training_set(coin, extension, label_min, label_max, n_in=1, n_out=0, lag=0, train_pct=0.8):
+def load_training_set(filename, label_min, label_max, n_in=1, n_out=0, lag=0, train_pct=0.8):
     # Load the dataset
-    dataset = read_csv(coin+extension, header=0)
+    dataset = read_csv(filename, header=0)
     values = dataset.values[:,:-1]
 
     n_col = values.shape[1]
@@ -199,9 +199,9 @@ def plot_predictions(x, test_y, yhat_raw, yhat, plot_filename_graphs, plot_filen
 
 
 
-def run_on_test_data(coin, wfilename, scaler, model, n_in=1, n_out=0, lag=0):
+def run_on_test_data(filename, scaler, model, n_in=1, n_out=0, lag=0):
     # Load the dataset
-    dataset = read_csv(coin+wfilename, header=0)
+    dataset = read_csv(filename, header=0)
     values = dataset.values[:,:-1]
 
     n_col=values.shape[1]
@@ -367,15 +367,14 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-coins = [ "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-#coins = ["AMP", "ANT", "ARDR", "ARK", "AUR"]
-#coins = ["ANT", "ARDR", "BRK", "DOGE"] # T1 > T2
+coins = ["2GIVE", "ARDR"]
 
+training_directory = "training_data/"
 training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
 lstm_layers = [100,100]
-epochs=50
+epochs=5
 price_col=8
 batch_size=450
 label_min=0
@@ -410,7 +409,7 @@ for coin in coins:
 
     
     print("-- Loading data")
-    (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(coin, training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
+    (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_directory+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
     if (train_X.shape[0]==1):
         print("No training data found. Skipping")
@@ -499,7 +498,7 @@ for coin in coins:
     csvrow.extend([sum(pg), len(pg)])
 
     print("-- Running on test 1 data")
-    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
+    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_directory+coin+test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==1):
         print("No testing data found for this coin. Skipping.")
     #    continue
@@ -522,7 +521,7 @@ for coin in coins:
     csvrow.extend([sum(pg), len(pg)])
 
     print("-- Running on test 2 data")
-    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
+    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(training_directory+coin+test2_filename, scaler, model, n_in=timesteps)
     if (test_X3.shape[0]==1):
         print("No testing data found for this coin. Skipping.")
     #   continue
