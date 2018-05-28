@@ -27,7 +27,7 @@ for (f in files) {
 	cat( "Neg months: ", negs, "/", nr*3, " ", negs/(nr*3), "\n", sep="")
 
 	cat("\n---\n")
-	cat( "Sum estimate at BTC=$5000 (downsampled by 30):", floor(st*(200/nr)*0.05*5000/30), "\n")
-	cat( "Mean estimate at BTC=$5000 (downsampled by 30):", floor(mt*(200/nr)*0.05*5000/30), "\n")
+	cat( "Sum estimate at BTC=$5000 (downsampled by 30):", floor(st*(180/nr)*0.05*5000/30), "\n")
+	cat( "Mean estimate at BTC=$5000 (downsampled by 30):", floor(mt*(180/nr)*0.05*5000/30), "\n")
 	cat("========================\n")
 }

@@ -60,7 +60,7 @@ def load_training_set(filename, label_min, label_max, n_in=1, n_out=0, lag=0, tr
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
         null = np.zeros((0))
-        return (null, null, null, null, null)
+        return (null, null, null, null, null, null)
 
 
     nn = reframed.columns
@@ -367,7 +367,7 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 #coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA"]
-coins = ["2GIVE", "ARDR"]
+
 
 training_directory = "training_data/"
 model_directory = "models/"
@@ -412,7 +412,7 @@ for coin in coins:
     print("-- Loading data")
     (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_directory+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
-    if (train_X.shape[0]==1):
+    if (train_X.shape[0]==0):
         print("No training data found. Skipping")
         continue
 
@@ -499,10 +499,15 @@ for coin in coins:
     csvrow.extend([sum(pg), len(pg)])
 
     print("-- Running on test 1 data")
+<<<<<<< HEAD
+    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(coin, test1_filename, scaler, model, n_in=timesteps)
+    if (test_X2.shape[0]==0):
+=======
     (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_directory+coin+test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==1):
+>>>>>>> e35a8534fcb5bfaff95266fcf9524d8cd09c0a38
         print("No testing data found for this coin. Skipping.")
-    #    continue
+        continue
 
 
     if timesteps > 1:
@@ -522,10 +527,15 @@ for coin in coins:
     csvrow.extend([sum(pg), len(pg)])
 
     print("-- Running on test 2 data")
+<<<<<<< HEAD
+    (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(coin, test2_filename, scaler, model, n_in=timesteps)
+    if (test_X3.shape[0]==0):
+=======
     (test_X3, test_y3, yhat_raw3, yhat3) = run_on_test_data(training_directory+coin+test2_filename, scaler, model, n_in=timesteps)
     if (test_X3.shape[0]==1):
+>>>>>>> e35a8534fcb5bfaff95266fcf9524d8cd09c0a38
         print("No testing data found for this coin. Skipping.")
-    #   continue
+        continue
 
     if timesteps > 1:
         x3 = test_X3.reshape((test_X3.shape[0], timesteps, n_col))
