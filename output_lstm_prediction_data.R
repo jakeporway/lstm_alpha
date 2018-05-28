@@ -5,6 +5,8 @@ source("utility_file.R")
 load("coin.names")
 
 days_to_lookback=8
+end.time <- as.integer(Sys.time())
+start.time <- end.time-24*3600*days_to_lookback
 
 rsi.vals <- c(720, 1440, 2880)
 
@@ -107,8 +109,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
 
 cat(" WRITING DATA ------------------\n")
 
-end.time <- as.integer(Sys.time())
-start.time <- end.time-24*3600*days_to_lookback
+
 
 coins <- list()
 
