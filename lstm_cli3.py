@@ -370,6 +370,7 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 coins = ["2GIVE", "ARDR"]
 
 training_directory = "training_data/"
+model_directory = "models/"
 training_filename = "_training_through_feb.csv"
 test1_filename = "_mar_apr.csv"
 test2_filename = "_apr_may.csv"
@@ -380,7 +381,7 @@ batch_size=450
 label_min=0
 label_max=15
 timesteps=1
-do_training=True
+do_training=False
 cutoff = 0.95
 
 strategy = {}
@@ -421,23 +422,23 @@ for coin in coins:
 
         # Test saving the model
         model_json = model.to_json()
-        with open(coin+"_model.json", "w") as json_file:
+        with open(model_directory+coin+"_model.json", "w") as json_file:
             json_file.write(model_json)
         # serialize weights to HDF5
-        model.save_weights(coin+"_model.h5")
+        model.save_weights(model_directory+coin+"_model.h5")
         print("Saved model to disk")
 
-        scaler_filename = coin+"_scaler.save"
+        scaler_filename = model_directory+coin+"_scaler.save"
         joblib.dump(scaler, scaler_filename)
     else:
-        json_file = open(coin+'_model.json', 'r')
+        json_file = open(model_directory+coin+'_model.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
+        model = model_from_json(loaded_model_json)
         # load weights into new model
-        loaded_model.load_weights(coin+"_model.h5")
+        model.load_weights(model_directory+coin+"_model.h5")
         print("Loaded model from disk")
-        scaler_filename = coin+"_scaler.save"
+        scaler_filename = model_directory+coin+"_scaler.save"
         scaler = joblib.load(scaler_filename) 
 
     # Compress test_y back into a single number (undo one-hot)
