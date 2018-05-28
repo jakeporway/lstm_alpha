@@ -2,11 +2,13 @@
 source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
-load("coin.names")
 
 days_to_lookback=8
-end.time <- as.integer(Sys.time())
+#end.time <- as.integer(Sys.time())
+end.time <- 1527424200-4*24*3600
 start.time <- end.time-24*3600*days_to_lookback
+root_path="prediction_data/"
+filename="_predict.csv"
 
 rsi.vals <- c(720, 1440, 2880)
 
@@ -109,8 +111,6 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
 
 cat(" WRITING DATA ------------------\n")
 
-
-
 coins <- list()
 
 con <- dbConnect(RMySQL::MySQL(fetch.default.rec = 500000), user="jake", password="fandang0", dbname="coins")
@@ -127,8 +127,7 @@ btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
 
 lstm.res <- list()
 times <- list()
-root_path="/Users/jake/projects/lstm/airpollution/test_predict/"
-filename="_predict.csv"
+
 
 for (t.coin in coins) {
   print(paste("Writing csv for", t.coin$coin))

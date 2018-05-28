@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/ipython
 
 import math
 import sys, os, os.path, fnmatch
@@ -50,19 +50,19 @@ def series_to_supervised(data, n_in=1, n_out=1, lag=1, dropnan=True):
 
 # Predict something with our learned model and scaler
 def predict(model, scaler, test_X, test_y, n_in, n_features, subtract=0):
-    yhat_raw = model.predict(test_X)
-    if n_in > 1:
-        test_X2 = test_X.reshape((test_X.shape[0], n_in*n_features))
-    else:
-        test_X2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
+    #if n_in > 1:
+    #    test_X2 = test_X.reshape((test_X.shape[0], n_in*n_features))
+    #else:
+    #    test_X2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
     # invert scaling for forecast
-    inv_test_X2 = scaler.inverse_transform(test_X2)
+    #inv_test_X2 = scaler.inverse_transform(test_X2)
 
+    yhat_raw = model.predict(test_X)
     yhat = np.argmax(yhat_raw, axis=1)
 
-    rmse = math.sqrt(mean_squared_error(test_y, yhat))
-    print('Test RMSE: %.9f' % rmse)
+    #rmse = math.sqrt(mean_squared_error(test_y, yhat))
+    #print('Test RMSE: %.9f' % rmse)
 
     yhat = yhat - subtract
     return (yhat_raw, yhat)
@@ -72,7 +72,9 @@ def predict(model, scaler, test_X, test_y, n_in, n_features, subtract=0):
 # price_col needs to be the column the price is in in x. I slapped a bunch of variables onto the front
 # so it's not 0 anymore
 
-def plot_predictions(x, test_y, yhat_raw, yhat, plot_filename_graphs, plot_filename_correlations, price_col, label_min, label_max):
+def plot_predictions(x, test_y, yhat_raw, yhat, scaler, plot_filename_graphs, plot_filename_correlations, price_col, label_min, label_max):
+
+    x = scaler.inverse_transform(x)
 
     graph_i=6
     pyplot.figure(figsize=(6,12))
@@ -117,12 +119,11 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     # Load the dataset
     dataset = read_csv(wfilename, header=0)
     values = dataset.values[:,:-1]
-
     n_col=values.shape[1]
     reframed = series_to_supervised(values, n_in, n_out, lag)
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
-        null = np.zeros((1,1))
+        null = np.zeros((0))
         return (null, null, null, null)
 
     nn = reframed.columns
@@ -144,8 +145,8 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
 
     # invert scaling for forecast
     #inv_test_X2 = scaler.inverse_transform(test_X2)
-    rmse = math.sqrt(mean_squared_error(test_y, yhat))
-    print('Test RMSE: %.9f' % rmse)
+    #rmse = math.sqrt(mean_squared_error(test_y, yhat))
+    #print('Test RMSE: %.9f' % rmse)
 
     return (test_X, test_y, yhat_raw, yhat)
 
@@ -171,7 +172,7 @@ def buy(test_X, yhat_raw, price_col, scaler, method_params={}):
         buy_idx = np.argwhere(pp > method_params["thresh"])[:,0]
 
     if len(buy_idx):
-        if test_X.shape[1]-buy_idx[-1] < 30: # It said buy in the last 30 min
+        if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
             return True
         else:
             return False
@@ -179,13 +180,19 @@ def buy(test_X, yhat_raw, price_col, scaler, method_params={}):
         return False
 
 # TODO: Replace this with a read straight from MySQL
+fig_path = "figs/"
 model_path = "models/"
-data_path = "test_predict/"
+data_path = "prediction_data/"
 filename = "_predict.csv"
 data_files = os.listdir(data_path)
 data_files = [d for d in data_files if fnmatch.fnmatch(d, "*.csv")]
 timesteps=1
 price_col=8
+label_gt=3
+label_min=0
+label_max=15
+method_params_thresh=0.8
+debug_plot=True
 
 coins_to_buy = []
 
@@ -195,7 +202,6 @@ for fname in data_files:
     coin = fname[:uscore]
     print("Predicting " + coin)
     json_file = model_path+coin+'_model.json'
-
     weights_file = model_path+coin+'_model.h5'
     scaler_file = model_path+coin+"_scaler.save"
     if not os.path.isfile(json_file):
@@ -218,7 +224,7 @@ for fname in data_files:
     scaler = joblib.load(scaler_file) 
     
     (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(data_path+fname, scaler, model, n_in=timesteps)
-    if (test_X2.shape[0]==1):
+    if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
     
@@ -226,8 +232,11 @@ for fname in data_files:
         x2 = test_X2.reshape((test_X2.shape[0], timesteps, n_col))
     else:
         x2 = test_X2.reshape((test_X2.shape[0], test_X2.shape[2]))
-
-    method_params={"method":"pct_gt", "thresh":0.6, "label_gt":3}
+   
+    if debug_plot:
+        plot_predictions(x2, test_y2, yhat_raw2, yhat2, scaler, fig_path+coin+"_prediction_test.png", fig_path+coin+"_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+ 
+    method_params={"method":"pct_gt", "thresh":method_params_thresh, "label_gt":label_gt}
 
     should_buy = buy(x2, yhat_raw2, price_col, scaler, method_params=method_params)
     if should_buy:
