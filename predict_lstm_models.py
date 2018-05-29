@@ -115,10 +115,17 @@ def plot_predictions(x, test_y, yhat_raw, yhat, scaler, plot_filename_graphs, pl
     pyplot.close()
 
 
+# We make one modification to the prediction data that's different
+# than training - we keep the first column as time so we can make
+# sure we're predicting on fresh data. 
+
 def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     # Load the dataset
     dataset = read_csv(wfilename, header=0)
-    values = dataset.values[:,:-1]
+
+    # Split out the time column
+    times = dataset.values[:,0]
+    values = dataset.values[:,1:-1]
     n_col=values.shape[1]
     reframed = series_to_supervised(values, n_in, n_out, lag)
     if reframed.shape[0]==0:
@@ -148,9 +155,9 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     #rmse = math.sqrt(mean_squared_error(test_y, yhat))
     #print('Test RMSE: %.9f' % rmse)
 
-    return (test_X, test_y, yhat_raw, yhat)
+    return (test_X, test_y, yhat_raw, yhat, times)
 
-def buy(test_X, yhat_raw, price_col, scaler, method_params={}):
+def buy(test_X, yhat_raw, price_col, times, scaler, method_params={}):
 
     # Methods:
     # avg_thresh = Threshold on the average, method_params={thresh: <threshold>}
@@ -172,7 +179,8 @@ def buy(test_X, yhat_raw, price_col, scaler, method_params={}):
         buy_idx = np.argwhere(pp > method_params["thresh"])[:,0]
 
     if len(buy_idx):
-        if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
+        #if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
+        if int(time.time())-times[buy_idx[-1]] < 20*60: # This truly happened in the last 20 min
             return True
         else:
             return False
@@ -223,7 +231,7 @@ for fname in data_files:
     print("Loaded model from disk for " + coin)
     scaler = joblib.load(scaler_file) 
     
-    (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(data_path+fname, scaler, model, n_in=timesteps)
+    (test_X2, test_y2, yhat_raw2, yhat2, times) = run_on_test_data(data_path+fname, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
@@ -238,7 +246,7 @@ for fname in data_files:
  
     method_params={"method":"pct_gt", "thresh":method_params_thresh, "label_gt":label_gt}
 
-    should_buy = buy(x2, yhat_raw2, price_col, scaler, method_params=method_params)
+    should_buy = buy(x2, yhat_raw2, price_col, times, scaler, method_params=method_params)
     if should_buy:
         coins_to_buy.append(coin.upper())
 

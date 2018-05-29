@@ -1,4 +1,4 @@
- # pull data from our DB and add features for LSTM training
+# pull data from our DB and add features for LSTM training
 source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
@@ -94,8 +94,10 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     rsis[,i] <- RSI(gg$price, n=floor(rsi.vals/2))
   }
   
-  # Values to ignore (NAs in the beginning, 0 labels at the end)
-  idx <- (tail(rsi.vals,1)*2+10):(nrow(aroons))
+  # OLD VERSION: Values to ignore (NAs in the beginning, 0 labels at the end)
+  #idx <- (tail(rsi.vals,1)*2+10):(nrow(aroons))
+  # NEW VERSION: This is production, go straight up to the end
+  idx <- (tail(rsi.vals,1)*2+10):end_idx
   # 
   # aroons <- rowSums(aroons)
   # aroonvp  <- rowSums(aroonvp)
@@ -152,7 +154,8 @@ for (t.coin in coins) {
   
   # Drop time, ttc.24 and ttp
   res <- res[,-c(1,11,12)]
-  res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
+  #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
+  res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
   
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
