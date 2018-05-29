@@ -183,6 +183,7 @@ def buy(test_X, yhat_raw, price_col, times, scaler, method_params={}):
         if int(time.time())-times[buy_idx[-1]] < 20*60: # This truly happened in the last 20 min
             return True
         else:
+            print("Latest buy signal was too late, at " + str(times[buy_idx[-1]])
             return False
     else:
         return False
