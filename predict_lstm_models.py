@@ -242,7 +242,7 @@ for fname in data_files:
     if should_buy:
         coins_to_buy.append(coin.upper())
 
-f = csv.writer(open("coins.to.buy.csv", "w"))
+f = csv.writer(open("coins.to.buy.lstm.csv", "w"))
 for c in coins_to_buy:
     f.writerow([c])
 
