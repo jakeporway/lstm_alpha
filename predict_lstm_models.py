@@ -192,7 +192,7 @@ label_gt=3
 label_min=0
 label_max=15
 method_params_thresh=0.8
-debug_plot=True
+debug_plot=False
 
 coins_to_buy = []
 
