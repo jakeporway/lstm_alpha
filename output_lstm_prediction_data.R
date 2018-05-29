@@ -54,7 +54,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   pgrt.scan <- 3500
   
-  gg <- t.coin$gg[(real.start:end_idx),]
+  gg <- t.coin$gg #[(real.start:end_idx),]
   
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
@@ -97,7 +97,8 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   # OLD VERSION: Values to ignore (NAs in the beginning, 0 labels at the end)
   #idx <- (tail(rsi.vals,1)*2+10):(nrow(aroons))
   # NEW VERSION: This is production, go straight up to the end
-  idx <- (tail(rsi.vals,1)*2+10):end_idx
+  idx <- (tail(rsi.vals,1)*2+10):nrow(gg)
+
   # 
   # aroons <- rowSums(aroons)
   # aroonvp  <- rowSums(aroonvp)
@@ -108,6 +109,16 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   rvrp2 <- rvrp.fun(gg, win.size=360)
   rvrp3 <- rvrp.fun(gg, win.size=720)
   rvrp4 <- rvrp.fun(gg, win.size=2880)
+
+  names(aroons) <- paste("aroon.", rsi.vals, sep="")
+  names(aroonvp) <- paste("aroonvp.", rsi.vals, sep="")
+  names(macds) <- paste("macds.", rsi.vals, sep="")
+  names(macdv) <- paste("macdv.", rsi.vals, sep="")
+  names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
+  names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  
+  #d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
+  # NEW VERSION: Trying to take the end of all of this data
   d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
   return(d)
 }
