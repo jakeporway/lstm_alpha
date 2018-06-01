@@ -157,7 +157,7 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
 
     return (test_X, test_y, yhat_raw, yhat, times)
 
-def buy(test_X, yhat_raw, price_col, times, scaler, method_params={}):
+def buy(test_X, yhat_raw, price_col, times, strategy, scaler, method_params={}):
 
     # Methods:
     # avg_thresh = Threshold on the average, method_params={thresh: <threshold>}
@@ -179,8 +179,21 @@ def buy(test_X, yhat_raw, price_col, times, scaler, method_params={}):
         buy_idx = np.argwhere(pp > method_params["thresh"])[:,0]
 
     if len(buy_idx):
+        bb = int(buy_idx[-1])
         #if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
-        if int(time.time())-times[buy_idx[-1]] < 20*60: # This truly happened in the last 20 min
+        if int(time.time())-times[bb] < 20*60: # This truly happened in the last 20 min
+            inv_X = scaler.inverse_transform(test_X)
+            ignore_if_increased_by = strategy["ignore_if_increased_by"]
+            ignore_window_hours = strategy["ignore_window_hours"]
+            buy_price = inv_X[bb, price_col]
+            look_back = ignore_window_hours*60
+            if bb >= look_back:
+                earlier_price = inv_X[bb-look_back), price_col]
+                pct_change = (buy_price-earlier_price)/earlier_price
+                if pct_change >= ignore_if_increased_by:
+                    print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
+                    return False
+            print("Buying " + coin + "!")
             return True
         else:
             print("Latest buy signal was too late, at " + str(times[buy_idx[-1]]) + ": " + str(int((time.time()-times[buy_idx[-1]])/60)) + " minutes ago.")
@@ -202,6 +215,14 @@ label_min=0
 label_max=15
 method_params_thresh=0.8
 debug_plot=True
+
+strategy = {}
+strategy["pct_gain"]=0.15
+strategy["pct_loss"]=100
+strategy["days_to_hold"]=4
+strategy["ignore_if_increased_by"]=0.1
+strategy["ignore_window_hours"]=24 # If we've seen 10%+ gains in the last 3 hours, don't buy
+
 
 coins_to_buy = []
 
@@ -256,7 +277,7 @@ for fname in data_files:
  
     method_params={"method":"pct_gt", "thresh":method_params_thresh, "label_gt":label_gt}
 
-    should_buy = buy(x2, yhat_raw2, price_col, times, scaler, method_params=method_params)
+    should_buy = buy(x2, yhat_raw2, price_col, times, strategy, scaler, method_params=method_params)
     if should_buy:
         coins_to_buy.append(coin.upper())
 
