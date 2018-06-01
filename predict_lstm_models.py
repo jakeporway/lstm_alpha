@@ -1,7 +1,7 @@
 #!/usr/bin/ipython
 
 import math
-import sys, os, os.path, fnmatch
+import sys, os, os.path, fnmatch, time
 import numpy as np
 from numpy import concatenate
 from matplotlib import pyplot
@@ -131,7 +131,7 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
         null = np.zeros((0))
-        return (null, null, null, null)
+        return (null, null, null, null, null)
 
     nn = reframed.columns
 
@@ -183,7 +183,7 @@ def buy(test_X, yhat_raw, price_col, times, scaler, method_params={}):
         if int(time.time())-times[buy_idx[-1]] < 20*60: # This truly happened in the last 20 min
             return True
         else:
-            print("Latest buy signal was too late, at " + str(times[buy_idx[-1]])
+            print("Latest buy signal was too late, at " + str(times[buy_idx[-1]]) + ": " + str(int((time.time()-times[buy_idx[-1]])/60)) + " minutes ago.")
             return False
     else:
         return False
@@ -201,9 +201,14 @@ label_gt=3
 label_min=0
 label_max=15
 method_params_thresh=0.8
-debug_plot=False
+debug_plot=True
 
 coins_to_buy = []
+
+writer = csv.writer(open("pct_argmax.csv", "w"))
+
+
+
 
 for fname in data_files:
     
@@ -236,6 +241,10 @@ for fname in data_files:
     if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
+
+    # Test to see what % of argmax is 0 for each coin. My suspicion is that the funky models have a much higher %age
+    pc = sum(yhat2==1)/float(len(yhat2))
+    writer.writerow([coin,pc])
     
     if timesteps > 1:
         x2 = test_X2.reshape((test_X2.shape[0], timesteps, n_col))
@@ -250,6 +259,8 @@ for fname in data_files:
     should_buy = buy(x2, yhat_raw2, price_col, times, scaler, method_params=method_params)
     if should_buy:
         coins_to_buy.append(coin.upper())
+
+print("Coins to buy: " + str(coins_to_buy))
 
 f = csv.writer(open("coins.to.buy.lstm.csv", "w"))
 for c in coins_to_buy:

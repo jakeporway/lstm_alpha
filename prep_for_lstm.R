@@ -18,20 +18,36 @@ may.times <- c(1525174760, 1527811200)
 
 batch_list = list(
   list(
-    name="Training from October through February",
-    root_path="/Users/jake/projects/lstm/airpollution/training_data/",
-    filename="_training_through_febx.csv",
+    name="Training from October through April",
+    root_path="/home/ec2-user/stocks/lstm_alpha/new_training",
+    filename="_training_through_apr.csv",
     start.time=oct.times[1],
-    end.time=feb.times[2]
+    end.time=apr.times[2]
   ),
   
   list(
-    name="March to April",
-    root_path="/Users/jake/projects/lstm/airpollution/training_data/",
-    filename="_mar_aprx.csv",
-    start.time=mar.times[1],
-    end.time=mar.times[2]
+    name="April to May",
+    root_path="/home/ec2-user/stocks/lstm_alpha/new_training",
+    filename="_apr_may.csv",
+    start.time=may.times[1],
+    end.time=may.times[2]
   )
+
+#  list(
+#    name="Training from October through April",
+#    root_path="/Users/jake/projects/lstm/airpollution/new_training/",
+#    filename="_training_through_apr.csv",
+#    start.time=oct.times[1],
+#    end.time=apr.times[2],
+#  ),
+  
+#  list(
+#    name="April to May",
+#    root_path="/Users/jake/projects/lstm/airpollution/new_training/",
+#    filename="_apr_may.csv",
+#    start.time=may.times[1],
+#    end.time=may.times[2]
+#  )
 )
 
 run_min <- 60
@@ -137,19 +153,34 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   return(d)
 }
 
-output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path, filename, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset) {
-  coins <- load.coins(coins_to_save, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
-  btc <- load.coins("BTC", start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
-  btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
+output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path, filename, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, max.end.time=0) {
+  #coins <- load.coins(coins_to_save, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, max.end.time)
+
+  con <- dbConnect(RMySQL::MySQL(fetch.default.rec = 500000), user="jake", password="fandang0", dbname="coins")                              
+  buffer <- 0                                                                                                                                  
+  res <- dbSendQuery(con, paste("SELECT time, high, low, open, close, volume_from, volume_to, price FROM btc_prices WHERE time >= ", start.time-buffer*60, " AND time <= ", end.time, ";", sep=""))                                                                                           
+  btc <- dbFetch(res, n=-1)                                                                                                                    
+  dbClearResult(res)                                                                                                                          
+  dbDisconnect(con)   
+
+  btc2 <- btc[,c("time", "price", "volume_to")]
   
   lstm.res <- list()
   times <- list()
   
   lag <- 360
   
-  for (t.coin in coins) {
-    print(paste("Writing csv for", t.coin$coin))
+  for (t.coin in coins_to_save) {
+    print(paste("Writing csv for", t.coin))
     
+    coin <- load.coin(t.coin, start.time, end.time, features.n, btc, max.end.time)
+    if (is.null(coin)) {
+       next
+    }
+    t.coin <- add.features.coin(coin, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
+    if (is.null(t.coin)) {
+       next
+    }
     res <- convert.for.lstm(t.coin, rvrp.length)
     if (!("label" == names(res)[13])) {
       print("skipping") 
@@ -171,7 +202,9 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     res <- res[,-c(1,11,12)]
     res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
     
-    write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
+    fname <- paste(root_path,"/",t.coin$coin, filename, sep="")
+    print(paste("Writing", fname))
+    write.csv(res, file=fname, row.names=F)
   }
 }
 
@@ -186,13 +219,16 @@ get_coin_names_from_db <- function() {
   return(coins_to_save)
 }
 
-#coins_to_save = get_coin_names_from_db()
+coins_to_save = get_coin_names_from_db()
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA")
-coins_to_save = c("2GIVE", "ARDR")
+#coins_to_save = c("2GIVE", "ARDR")
+
+times = unlist(lapply(batch_list, function(x) { x$end.time }))
+max.end.time = max(times)
 
 for (batch in batch_list) {
   cat("------ Writing", batch$name, "\n")
-  output_batch_of_data(coins_to_save, batch$start.time, batch$end.time, batch$root_path, batch$filename, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
+  output_batch_of_data(coins_to_save, batch$start.time, batch$end.time, batch$root_path, batch$filename, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, max.end.time)
 }
 
 
