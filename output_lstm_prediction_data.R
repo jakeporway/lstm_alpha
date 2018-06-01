@@ -1,12 +1,15 @@
- # pull data from our DB and add features for LSTM training
+# pull data from our DB and add features for LSTM training
 source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
-load("coin.names")
 
 days_to_lookback=8
 end.time <- as.integer(Sys.time())
+#end.time <- 1527424200-4*24*3600
 start.time <- end.time-24*3600*days_to_lookback
+
+root_path="prediction_data/"
+filename="_predict.csv"
 
 rsi.vals <- c(720, 1440, 2880)
 
@@ -51,7 +54,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   pgrt.scan <- 3500
   
-  gg <- t.coin$gg[(real.start:end_idx),]
+  gg <- t.coin$gg #[(real.start:end_idx),]
   
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
@@ -91,8 +94,11 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     rsis[,i] <- RSI(gg$price, n=floor(rsi.vals/2))
   }
   
-  # Values to ignore (NAs in the beginning, 0 labels at the end)
-  idx <- (tail(rsi.vals,1)*2+10):(nrow(aroons))
+  # OLD VERSION: Values to ignore (NAs in the beginning, 0 labels at the end)
+  #idx <- (tail(rsi.vals,1)*2+10):(nrow(aroons))
+  # NEW VERSION: This is production, go straight up to the end
+  idx <- (tail(rsi.vals,1)*2+10):nrow(gg)
+
   # 
   # aroons <- rowSums(aroons)
   # aroonvp  <- rowSums(aroonvp)
@@ -103,13 +109,21 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   rvrp2 <- rvrp.fun(gg, win.size=360)
   rvrp3 <- rvrp.fun(gg, win.size=720)
   rvrp4 <- rvrp.fun(gg, win.size=2880)
+
+  names(aroons) <- paste("aroon.", rsi.vals, sep="")
+  names(aroonvp) <- paste("aroonvp.", rsi.vals, sep="")
+  names(macds) <- paste("macds.", rsi.vals, sep="")
+  names(macdv) <- paste("macdv.", rsi.vals, sep="")
+  names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
+  names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  
+  #d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
+  # NEW VERSION: Trying to take the end of all of this data
   d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
   return(d)
 }
 
 cat(" WRITING DATA ------------------\n")
-
-
 
 coins <- list()
 
@@ -127,8 +141,7 @@ btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
 
 lstm.res <- list()
 times <- list()
-root_path="/Users/jake/projects/lstm/airpollution/test_predict/"
-filename="_predict.csv"
+
 
 for (t.coin in coins) {
   print(paste("Writing csv for", t.coin$coin))
@@ -152,7 +165,8 @@ for (t.coin in coins) {
   
   # Drop time, ttc.24 and ttp
   res <- res[,-c(1,11,12)]
-  res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
+  #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
+  res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
   
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
