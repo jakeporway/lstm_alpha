@@ -1,4 +1,5 @@
-files = dir(pattern="*_results.csv")
+args = commandArgs(trailingOnly=T)
+files = dir(pattern=args[1])
 
 for (f in files) {
 
