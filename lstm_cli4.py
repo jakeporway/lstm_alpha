@@ -290,6 +290,8 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
     method = method_params["method"]
     pct_gain = strategy["pct_gain"]
     pct_loss = strategy["pct_loss"]
+    ignore_if_increased_by = strategy["ignore_if_increased_by"]
+    ignore_window_hours = strategy["ignore_window_hours"]
     days_to_hold = strategy["days_to_hold"]
 
     buy_idx = np.zeros((0,0))
@@ -309,10 +311,22 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
         #print i
         bb = int(buy_idx[i])
         mn = min(days_to_hold*24*60, n-bb-1)
-        buy_price = inv_X[int(buy_idx[i]), price_col]
+        buy_price = inv_X[bb, price_col]
         high_target = buy_price*(1+pct_gain)
         low_target = buy_price*(1-pct_loss)
 
+        # Check to see if the price has recently spiked and we're just getting
+        # echo buy signals. 
+        look_back = ignore_window_hours*60
+        if bb >= look_back:
+            earlier_price = inv_X[bb-look_back), price_col]
+            pct_change = (buy_price-earlier_price)/earlier_price
+            if pct_change >= ignore_if_increased_by:
+                #print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
+                continue
+
+
+        # OK, we're good, let's see about buying
         hit_high = np.argwhere(inv_X[(bb+1):(bb+mn),price_col] >= high_target)+bb+1
         hit_low = np.argwhere(inv_X[(bb+1):(bb+mn),price_col] <= low_target)+bb+1
 
@@ -386,6 +400,9 @@ strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
+strategy["ignore_if_increased_by"]=0.1
+strategy["ignore_window_hours"]=24 # If we've seen 10%+ gains in the last 3 hours, don't buy
+
 results_file_base="predict_may_results.csv"
 
 counter=0
