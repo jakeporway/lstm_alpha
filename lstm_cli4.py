@@ -365,7 +365,9 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
     return (buy_idx, sell_idx, pct_diff)
 
-coins =["LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
+coins = ["MANA"]
+#coins = ["2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
+
 
 training_path = "training_data/"
 model_path = "models/"
@@ -378,7 +380,7 @@ batch_size=450
 label_min=0
 label_max=15
 timesteps=1
-do_training=True
+do_training=False
 cutoff = 0.95
 method_thresh=0.8
 
@@ -386,7 +388,7 @@ strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file_base="predict_may_results.csv"
+results_file_base="predict_may_no_spike_buys_results.csv"
 
 counter=0
 results_file=str(counter)+"-"+results_file_base
