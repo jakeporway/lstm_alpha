@@ -1,4 +1,3 @@
-#!/usr/bin/python
 
 import math
 import os, os.path
@@ -52,25 +51,25 @@ def series_to_supervised(data, n_in=1, n_out=1, lag=1, dropnan=True):
 def load_training_set(filename, label_min, label_max, n_in=1, n_out=0, lag=0, train_pct=0.8):
     # Load the dataset
     dataset = read_csv(filename, header=0)
-    values = dataset.values[:,:-1]
+    #values = dataset.values[:,:-1]
 
-    n_col = values.shape[1]
+    n_col = dataset.values.shape[1]
     # frame as supervised learning
-    reframed = series_to_supervised(values, n_in, n_out, lag)
+    reframed = series_to_supervised(dataset.values, n_in, n_out, lag)
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
         null = np.zeros((0))
         return (null, null, null, null, null, null)
 
 
-    nn = reframed.columns
+
+    nn = reframed.columns[:-1]
+    label = reframed.values[n_in:,-1]
 
     # normalize features
     scaler = MinMaxScaler(feature_range=(0, 1))
-    reframed = DataFrame(scaler.fit_transform(reframed))
+    reframed = DataFrame(scaler.fit_transform(reframed.values[n_in:,:-1]))
     reframed.columns=nn
-
-    label = dataset.values[n_in:,-1]
 
     # split into train and test sets
     values = reframed.values
@@ -380,29 +379,37 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
     return (buy_idx, sell_idx, pct_diff)
 
 
-coins = ["2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
+
+
+
+
+coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
+
+
 
 
 training_path = "training_data/"
 model_path = "models/"
-training_filename = "_training_through_apr.csv"
+training_filename = "_data_oct_may.csv"
 test1_filename = "_apr_may.csv"
 lstm_layers = [100,100]
-epochs=50
+epochs=30
 price_col=8
 batch_size=450
 label_min=0
 label_max=15
 timesteps=1
 do_training=False
+do_plotting=False
 cutoff = 0.95
-method_thresh=0.8
+method_thresh_validation=0.8
+method_thresh_test=0.6
 
 strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file_base="predict_may_results.csv"
+results_file_base="_0.8_0.6_predict_may_results.csv"
 
 strategy["ignore_if_increased_by"]=0.08
 strategy["ignore_window_hours"]=36 # If we've seen 10%+ gains in the last 3 hours, don't buy
@@ -448,7 +455,7 @@ for coin in coins:
         print("Saved model to disk")
 
         scaler_filename = model_path+coin+"_scaler.save"
-        joblib.dump(scaler, scaler_filename)
+        joblib.dump(scaler, scaler_filename, protocol=2)
     else:
         json_file = model_path+coin+'_model.json'
         weights_file = model_path+coin+'_model.h5'
@@ -482,8 +489,9 @@ for coin in coins:
     else:
         x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
-    print("-- Plotting")
-    plot_predictions(x2, test_y, yhat_raw, yhat, "figs_test/"+coin+"_1_validation_graphs.png", "figs_test/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+    if do_plotting:
+        print("-- Plotting")
+        plot_predictions(x2, test_y, yhat_raw, yhat, "figs_test/"+coin+"_1_validation_graphs.png", "figs_test/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
 
     (results, baseline) = compute_accuracy(np.average(yhat_raw, axis=1, weights=range(label_min, label_max)), test_y, 100)
 
@@ -512,7 +520,7 @@ for coin in coins:
 
     
     #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
-    method_params={"method":"pct_gt", "thresh":method_thresh, "label_gt":3}
+    method_params={"method":"pct_gt", "thresh":method_thresh_validation, "label_gt":3}
 
     if timesteps > 1:
         x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
@@ -538,13 +546,15 @@ for coin in coins:
     else:
         x2 = test_X2.reshape((test_X2.shape[0], test_X2.shape[2]))
 
-    print("-- Plotting")
-    plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs_test/"+coin+"_3_test1_graphs.png", "figs_test/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+    if do_plotting:
+        print("-- Plotting")
+        plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs_test/"+coin+"_3_test1_graphs.png", "figs_test/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
     #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
     #print("++ Test set 1: pct good: " + str(pct_good) + " Num good: " + str(num_good))
     #f.write("++ Test set 1:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
 
     if timesteps <= 1: # I don't know how to do this with 3D arrays...
+        method_params={"method":"pct_gt", "thresh":method_thresh_test, "label_gt":3}
         (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, "figs_test/"+coin+"_4_test1_buys.png", strategy, method_params=method_params)
         print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
         #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
