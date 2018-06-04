@@ -1,7 +1,7 @@
 #!/usr/bin/ipython
 
 import math
-import sys, os, os.path, fnmatch
+import sys, os, os.path, fnmatch, time
 import numpy as np
 from numpy import concatenate
 from matplotlib import pyplot
@@ -131,7 +131,7 @@ def run_on_test_data(wfilename, scaler, model, n_in=1, n_out=0, lag=0):
     if reframed.shape[0]==0:
         print("No non-NA data found for this coin. Skipping")
         null = np.zeros((0))
-        return (null, null, null, null)
+        return (null, null, null, null, null)
 
     nn = reframed.columns
 
@@ -182,17 +182,17 @@ def buy(test_X, yhat_raw, price_col, times, strategy, scaler, method_params={}):
         bb = int(buy_idx[-1])
         #if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
         if int(time.time())-times[bb] < 20*60: # This truly happened in the last 20 min
-            inv_X = scaler.inverse_transform(test_X)
-            ignore_if_increased_by = strategy["ignore_if_increased_by"]
-            ignore_window_hours = strategy["ignore_window_hours"]
-            buy_price = inv_X[bb, price_col]
-            look_back = ignore_window_hours*60
-            if bb >= look_back:
-                earlier_price = inv_X[bb-look_back), price_col]
-                pct_change = (buy_price-earlier_price)/earlier_price
-                if pct_change >= ignore_if_increased_by:
-                    print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
-                    return False
+            #inv_X = scaler.inverse_transform(test_X)
+            #ignore_if_increased_by = strategy["ignore_if_increased_by"]
+            #ignore_window_hours = strategy["ignore_window_hours"]
+            #buy_price = inv_X[bb, price_col]
+            #look_back = ignore_window_hours*60
+            #if bb >= look_back:
+            #    earlier_price = inv_X[bb-look_back), price_col]
+            #    pct_change = (buy_price-earlier_price)/earlier_price
+            #    if pct_change >= ignore_if_increased_by:
+            #        print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
+            #        return False
             print("Buying " + coin + "!")
             return True
         else:
@@ -214,7 +214,7 @@ label_gt=3
 label_min=0
 label_max=15
 method_params_thresh=0.8
-debug_plot=False
+debug_plot=True
 
 strategy = {}
 strategy["pct_gain"]=0.15
@@ -224,12 +224,23 @@ strategy["ignore_if_increased_by"]=0.1
 strategy["ignore_window_hours"]=24 # If we've seen 10%+ gains in the last 3 hours, don't buy
 
 
+# List of coins we think are good buys
 coins_to_buy = []
+
+
+writer = csv.writer(open("pct_argmax.csv", "w"))
+
+# List of coins that we don't think performed well during model training/testing
+blacklisted_coins = open("blacklisted_coins.txt", "r").readlines()
+
 
 for fname in data_files:
     
     uscore = fname.find("_")
     coin = fname[:uscore]
+    if coin in blacklisted_coins:
+        print("Skipping " + coin + " because it's blacklisted.")
+        continue
     print("Predicting " + coin)
     json_file = model_path+coin+'_model.json'
     weights_file = model_path+coin+'_model.h5'
@@ -257,6 +268,10 @@ for fname in data_files:
     if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
         continue
+
+    # Test to see what % of argmax is 0 for each coin. My suspicion is that the funky models have a much higher %age
+    pc = sum(yhat2==1)/float(len(yhat2))
+    writer.writerow([coin,pc])
     
     if timesteps > 1:
         x2 = test_X2.reshape((test_X2.shape[0], timesteps, n_col))
@@ -271,6 +286,8 @@ for fname in data_files:
     should_buy = buy(x2, yhat_raw2, price_col, times, strategy, scaler, method_params=method_params)
     if should_buy:
         coins_to_buy.append(coin.upper())
+
+print("Coins to buy: " + str(coins_to_buy))
 
 f = csv.writer(open("coins.to.buy.lstm.csv", "w"))
 for c in coins_to_buy:

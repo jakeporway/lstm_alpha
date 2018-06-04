@@ -6,7 +6,7 @@ library(DBI)
 #source("../training/core_pump_library.R")
 
 
-load.coins <- function(coin.names, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset) {
+load.coins <- function(coin.names, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, max.end.time=0) {
  
   print("Loading coins...")
   coins <- list()
@@ -20,27 +20,30 @@ load.coins <- function(coin.names, start.time, end.time, features.n, win.sizes, 
   
   for (coin in coin.names) {
     print(coin)
-    cc <- load.coin(coin, start.time, end.time, features.n, btc)
+    cc <- load.coin(coin, start.time, end.time, features.n, btc, max.end.time)
     coins[[coin]] <- cc
   }
-  
   
   coins <- add.features(coins, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
   return(coins)
 }
 
-load.coin <- function(coin, start.time=-1, end.time=-1, features.n, btc=NULL) {
+load.coin <- function(coin, start.time=-1, end.time=-1, features.n, btc=NULL, max.end.time=0) {
   
   con <- dbConnect(RMySQL::MySQL(fetch.default.rec = 500000), user="jake", password="fandang0", dbname="coins")
   buffer <- 0
-  if (is.null(btc)) {
-    res <- dbSendQuery(con, paste("SELECT time, high, low, open, close, volume_from, volume_to, price FROM btc_prices WHERE time >= ", start.time-buffer*60, " AND time <= ", end.time, ";", sep=""))
-    btc <- dbFetch(res, n=-1)
-    dbClearResult(res)
-  }
   
   prices <- paste(tolower(coin), "_prices", sep="")
   
+  # Make sure that the coin has as much data as we're going to ever pull before pulling this
+  query <- dbSendQuery(con, paste("SELECT time FROM ", prices, " order by time desc limit 1;", sep=""))
+  res <- dbFetch(query, n=-1)
+  if (nrow(res) < 1 || res$time[1] < max.end.time) {
+     print(paste(coin, "didn't have data running up to max.end.time=", max.end.time, ". Skipping."))
+     dbDisconnect(con)
+     return(NULL)
+  }
+
   res <- tryCatch( {
     query <- dbSendQuery(con, paste("SELECT time, high, low, open, close, volume_from, volume_to, price FROM ", prices, " WHERE time >= ", start.time-buffer*60, " AND time <= ", end.time, ";", sep=""))
   }, error = function(err) {
@@ -57,6 +60,13 @@ load.coin <- function(coin, start.time=-1, end.time=-1, features.n, btc=NULL) {
       dbDisconnect(con)
       return(NULL)
     }
+
+    if (is.null(btc)) {
+       res <- dbSendQuery(con, paste("SELECT time, high, low, open, close, volume_from, volume_to, price FROM btc_prices WHERE time >= ", start.time-buffer*60, " AND time <= ", end.time, ";", sep=""))
+       btc <- dbFetch(res, n=-1)
+       dbClearResult(res)
+    }
+    
     gg <- normalize_data(gg, btc)
     dbClearResult(res)
     dbDisconnect(con)
@@ -71,18 +81,28 @@ add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.s
   print("Adding features...")
   for (coin in names(coins)) {
     print(coin)
-    gg <- coins[[coin]]$gg
+    if (is.null(coin)) {
+       next
+    }
+    coins[[coin]] <- add.features.coin(coins[[coin]], win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
+  }
+ return(coins)
+}
+
+add.features.coin <- function(coin, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset) {
+
+    gg <- coin$gg
     
     if (nrow(gg) < features.n) {
       print(paste("Not enough data found for", coin))
-      next
+      return(NULL)
     }
     
     #if (length(unique(gg$price)) < length(gg$price)/200) {
     rls <- rle(gg$price)
     if (any(rls$lengths) > length(gg$price)/20) {
       print(paste("not enough unique values for", coin))
-      next
+      return(NULL)
     }
     
     ttc <- add.ttc.daily.gain2(gg, ttc.time)
@@ -93,7 +113,7 @@ add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.s
     
     gg <- add_labels(gg, method="ttc.24.quantiles", breaks=gain.breaks, subtract_out=subtract_offset)
   
-    coins[[coin]]$gg <- gg
+    coin$gg <- gg
     
     rvrps <- list()
     # ffts <- list()
@@ -109,7 +129,7 @@ add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.s
       print(kk)
       rvrps[[kk]] <- rvrp.fun(gg, win.size=kk)
       if (sum(rvrps[[kk]])==0) {
-        next
+        return(NULL)
       }
       # fft.x <- rollapply(rvrps[[kk]], width=fft.w, by=by,FUN=fft)
       # fft.1 <- c(rep(0,fft.w-1), rep(fft.x[,1], each=by))
@@ -129,16 +149,14 @@ add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.s
       # macds[[kk]] <- MACD(z, nFast=kk/8, nSlow=kk/4, nSig=kk/2)
       
     }
-    coins[[coin]]$rvrps <- rvrps
+    coin$rvrps <- rvrps
     # coins[[coin]]$ffts <- ffts
     # coins[[coin]]$sax <- sax
     # coins[[coin]]$ccis <- ccis
     # coins[[coin]]$rsis <- rsis
     # coins[[coin]]$aroons <- aroons
     # coins[[coin]]$macds <- macds
-  
-  }
-  return(coins)
+  return(coin)
 }
 
 create.features.fft <- function(gg, label, win.sizes, features.n, hours.to.ignore.at.end) {
