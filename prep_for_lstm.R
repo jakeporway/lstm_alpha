@@ -18,20 +18,20 @@ may.times <- c(1525174760, 1527811200)
 
 batch_list = list(
   list(
-    name="Training from October through February",
-    root_path="/Users/jake/projects/lstm/airpollution/training_data/",
-    filename="_training_through_febx.csv",
+    name="Training from October through Jan",
+    root_path="/Users/jake/projects/stocks/lstm_alpha/augmented_data/",
+    filename="_training_oct_through_jan.csv",
     start.time=oct.times[1],
-    end.time=feb.times[2]
-  ),
-  
-  list(
-    name="March to April",
-    root_path="/Users/jake/projects/lstm/airpollution/training_data/",
-    filename="_mar_aprx.csv",
-    start.time=mar.times[1],
-    end.time=mar.times[2]
+    end.time=1517356860
   )
+  
+  #list(
+  #  name="March to April",
+  #  root_path="/Users/jake/projects/lstm/airpollution/training_data/",
+  #  filename="_mar_aprx.csv",
+  #  start.time=mar.times[1],
+  #  end.time=mar.times[2]
+  #)
 )
 
 run_min <- 60
@@ -187,9 +187,7 @@ get_coin_names_from_db <- function() {
 }
 
 #coins_to_save = get_coin_names_from_db()
-#coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BSD", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "FUN", "GAM", "GAME", "GBG", "GBYTE", "GCR", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HKG", "HMQ", "INCNT", "INFX", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MAID", "MANA")
-coins_to_save = c("2GIVE", "ARDR")
-
+coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
 for (batch in batch_list) {
   cat("------ Writing", batch$name, "\n")
   output_batch_of_data(coins_to_save, batch$start.time, batch$end.time, batch$root_path, batch$filename, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
