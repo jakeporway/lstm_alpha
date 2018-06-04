@@ -224,17 +224,23 @@ strategy["ignore_if_increased_by"]=0.1
 strategy["ignore_window_hours"]=24 # If we've seen 10%+ gains in the last 3 hours, don't buy
 
 
+# List of coins we think are good buys
 coins_to_buy = []
+
 
 writer = csv.writer(open("pct_argmax.csv", "w"))
 
+# List of coins that we don't think performed well during model training/testing
+blacklisted_coins = open("blacklisted_coins.txt", "r").readlines()
 
 
-data_files = ["NMR_predict.csv", "2GIVE_predict.csv", "BLOCK_predict.csv"]
 for fname in data_files:
     
     uscore = fname.find("_")
     coin = fname[:uscore]
+    if coin in blacklisted_coins:
+        print("Skipping " + coin + " because it's blacklisted.")
+        continue
     print("Predicting " + coin)
     json_file = model_path+coin+'_model.json'
     weights_file = model_path+coin+'_model.h5'
