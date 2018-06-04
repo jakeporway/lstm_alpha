@@ -182,17 +182,17 @@ def buy(test_X, yhat_raw, price_col, times, strategy, scaler, method_params={}):
         bb = int(buy_idx[-1])
         #if test_X.shape[0]-buy_idx[-1] < 20: # It said buy in the last X min
         if int(time.time())-times[bb] < 20*60: # This truly happened in the last 20 min
-            inv_X = scaler.inverse_transform(test_X)
-            ignore_if_increased_by = strategy["ignore_if_increased_by"]
-            ignore_window_hours = strategy["ignore_window_hours"]
-            buy_price = inv_X[bb, price_col]
-            look_back = ignore_window_hours*60
-            if bb >= look_back:
-                earlier_price = inv_X[bb-look_back), price_col]
-                pct_change = (buy_price-earlier_price)/earlier_price
-                if pct_change >= ignore_if_increased_by:
-                    print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
-                    return False
+            #inv_X = scaler.inverse_transform(test_X)
+            #ignore_if_increased_by = strategy["ignore_if_increased_by"]
+            #ignore_window_hours = strategy["ignore_window_hours"]
+            #buy_price = inv_X[bb, price_col]
+            #look_back = ignore_window_hours*60
+            #if bb >= look_back:
+            #    earlier_price = inv_X[bb-look_back), price_col]
+            #    pct_change = (buy_price-earlier_price)/earlier_price
+            #    if pct_change >= ignore_if_increased_by:
+            #        print(coin+" increased by " + str(pct_change) + " over the last 24 hours. Not buying.")
+            #        return False
             print("Buying " + coin + "!")
             return True
         else:
@@ -230,7 +230,7 @@ writer = csv.writer(open("pct_argmax.csv", "w"))
 
 
 
-
+data_files = ["NMR_predict.csv", "2GIVE_predict.csv", "BLOCK_predict.csv"]
 for fname in data_files:
     
     uscore = fname.find("_")
