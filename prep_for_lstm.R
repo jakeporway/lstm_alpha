@@ -15,16 +15,24 @@ feb.times <- c(1517474760, 1519874760)
 mar.times <- c(1519874760, 1522574760)               
 apr.times <- c(1522574760, 1525174760)
 may.times <- c(1525174760, 1527811200)
+june.times <- c(1527811200, 1530403200)
 
 batch_list = list(
-  list(
 
-    name="Training from October through Jan",
-    root_path="/Users/jake/projects/stocks/lstm_alpha/augmented_data/",
-    filename="_training_oct_through_jan.csv",
-    start.time=oct.times[1],
-    end.time=1517356860
-  )
+   list(
+	name="Training June",
+	root_path="/home/ec2-user/stocks/lstm_alpha/training_data",
+	filename="_june.csv",
+	start.time=june.times[1],
+	end.time=as.integer(Sys.time())-3600
+)
+  #list(
+   # name="Training from October through Jan",
+   # root_path="/Users/jake/projects/stocks/lstm_alpha/augmented_data/",
+   # filename="_training_oct_through_jan.csv",
+   # start.time=oct.times[1],
+   # end.time=1517356860
+  #)
   
   #list(
   #  name="March to April",

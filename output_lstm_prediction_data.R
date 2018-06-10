@@ -5,7 +5,7 @@ source("utility_file.R")
 
 days_to_lookback=8
 end.time <- as.integer(Sys.time())
-end.time <- end.time-4*24*3600
+#end.time <- end.time-4*24*3600
 start.time <- end.time-24*3600*days_to_lookback
 
 root_path="prediction_data/"
