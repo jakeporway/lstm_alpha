@@ -167,6 +167,8 @@ for (t.coin in coins) {
   res <- res[,-c(1,11,12)]
   #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
   res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
+  res2 <- apply(res, 2, diff)
+  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
   
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
