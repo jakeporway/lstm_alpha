@@ -231,6 +231,7 @@ coins_to_buy = []
 writer = csv.writer(open("pct_argmax.csv", "w"))
 
 # List of coins that we don't think performed well during model training/testing
+
 blacklisted_coins = open("blacklisted_coins.txt", "r").read().splitlines()
 
 for fname in data_files:
