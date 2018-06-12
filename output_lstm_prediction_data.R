@@ -5,7 +5,7 @@ source("utility_file.R")
 
 days_to_lookback=8
 end.time <- as.integer(Sys.time())
-#end.time <- end.time-4*24*3600
+end.time <- end.time-4*24*3600
 start.time <- end.time-24*3600*days_to_lookback
 
 root_path="prediction_data/"
@@ -142,7 +142,6 @@ btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
 lstm.res <- list()
 times <- list()
 
-
 for (t.coin in coins) {
   print(paste("Writing csv for", t.coin$coin))
   
@@ -168,7 +167,8 @@ for (t.coin in coins) {
   #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
   res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
   res2 <- apply(res, 2, diff)
-  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+  #res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)])	
   
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
