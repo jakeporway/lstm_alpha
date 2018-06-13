@@ -142,7 +142,6 @@ btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
 lstm.res <- list()
 times <- list()
 
-
 for (t.coin in coins) {
   print(paste("Writing csv for", t.coin$coin))
   
@@ -167,6 +166,12 @@ for (t.coin in coins) {
   res <- res[,-c(1,11,12)]
   #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
   res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
+  names(res)[c(1,2,3)] <- c("time", "btc.price", "btc.vol")
+  res2 <- apply(res[,-c(1)], 2, diff)
+  
+  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+  names(res)[ncol(res)] <- "label"
+
   
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
