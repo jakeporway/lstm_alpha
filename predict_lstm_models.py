@@ -1,5 +1,3 @@
-#!/usr/bin/ipython
-
 import math
 import sys, os, os.path, fnmatch, time
 import numpy as np
@@ -213,7 +211,7 @@ price_col=8
 label_gt=3
 label_min=0
 label_max=15
-method_params_thresh=0.8
+method_params_thresh=0.7
 debug_plot=True
 
 strategy = {}

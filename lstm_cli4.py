@@ -381,8 +381,6 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 
-
-
 coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
 
 
@@ -390,9 +388,9 @@ coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR
 
 training_path = "training_data/"
 model_path = "models/"
-training_filename = "_data_oct_may.csv"
-test1_filename = "_apr_may.csv"
-lstm_layers = [100,100]
+training_filename = "_data_oct_may_diff.csv"
+test1_filename = "_june_diff.csv"
+lstm_layers = [200,100]
 epochs=30
 price_col=8
 batch_size=450
@@ -400,16 +398,16 @@ label_min=0
 label_max=15
 timesteps=1
 do_training=False
-do_plotting=False
+do_plotting=True
 cutoff = 0.95
 method_thresh_validation=0.8
-method_thresh_test=0.6
+method_thresh_test=0.7
 
 strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file_base="_0.8_0.6_predict_may_results.csv"
+results_file_base="_"+str(method_thresh_validation)+"_"+str(method_thresh_test)+"_predict_jun_results.csv"
 
 strategy["ignore_if_increased_by"]=0.08
 strategy["ignore_window_hours"]=36 # If we've seen 10%+ gains in the last 3 hours, don't buy
@@ -434,7 +432,9 @@ for coin in coins:
     if coin == "" or len(sys.argv) > 1:
         coin = str(sys.argv[1])
 
-    
+    if not os.path.isfile(training_path+coin+training_filename):
+        print(training_path+coin+training_filename+" not found.")
+        continue
     print("-- Loading data")
     (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_path+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
@@ -536,6 +536,9 @@ for coin in coins:
 
     print("-- Running on test 1 data")
 
+    if not os.path.isfile(training_path+coin+test1_filename):
+        print(training_path+coin+test1_filename+" not found.")
+        continue
     (test_X2, test_y2, yhat_raw2, yhat2) = run_on_test_data(training_path+coin+test1_filename, scaler, model, n_in=timesteps)
     if (test_X2.shape[0]==0):
         print("No testing data found for this coin. Skipping.")
