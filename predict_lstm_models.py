@@ -234,6 +234,7 @@ writer = csv.writer(open("pct_argmax.csv", "w"))
 
 blacklisted_coins = open("blacklisted_coins.txt", "r").read().splitlines()
 
+
 for fname in data_files:
     
     uscore = fname.find("_")

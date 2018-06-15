@@ -102,9 +102,15 @@ pct_diff <- function(x, lag=1) {
 # This indicator is much faster to compute than pc, but may not be as robust.
 # Needs testing...
 rvrp.fun <- function(x, lag=1, win.size=30, buffer=100) {
-  diff.price <- c(diff(x$price.n, lag=lag), rep(0,lag))
-  pct.price <- diff.price/x$price.n
   
+  # THIS IS THE PART I COMMENTED OUT TO MAKE THE NA RVRP WARNING GO AWAY.
+  # CONSIDER PUTTING THIS BACK IF PERFORMANCE IS LOW
+  #diff.price <- c(diff(x$price.n, lag=lag), rep(0,lag))
+  #pct.price <- diff.price/x$price.n
+  
+  diff.price <- c(diff(x$price, lag=lag), rep(0,lag))
+  pct.price <- diff.price/x$price
+
   cum.vol <- cumsum(x$nmvol)
   pct.vol <- x$nmvol/cum.vol
   
