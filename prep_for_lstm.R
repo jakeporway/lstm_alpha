@@ -209,7 +209,7 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     # Add diffs of all variables too
     res2 <- apply(res, 2, diff)
     res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
-    
+    names(res)[ncol(res)] <- "label"
     fname <- paste(root_path,"/",t.coin$coin, filename, sep="")
     print(paste("Writing", fname))
     write.csv(res, file=fname, row.names=F)

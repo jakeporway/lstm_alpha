@@ -172,7 +172,7 @@ for (t.coin in coins) {
   names(res)[c(1,2,3)] <- c("time", "btc.price", "btc.vol")
   res2 <- apply(res[,-c(1)], 2, diff)
   
-  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+  res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-c(ncol(res2))], res[2:nrow(res),ncol(res)])
   names(res)[ncol(res)] <- "label"
 
   
