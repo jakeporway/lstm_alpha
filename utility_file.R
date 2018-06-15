@@ -17,6 +17,10 @@ load.coins <- function(coin.names, start.time, end.time, features.n, win.sizes, 
   btc <- dbFetch(res, n=-1)
   dbClearResult(res)
   dbDisconnect(con)
+
+  # ADDING THIS TO MAKE UP FOR BAD SQL DATA
+  bad.data <- btc$price==0
+  btc <- btc[!bad.data,]
   
   for (coin in coin.names) {
     print(coin)
@@ -60,6 +64,10 @@ load.coin <- function(coin, start.time=-1, end.time=-1, features.n, btc=NULL, ma
       dbDisconnect(con)
       return(NULL)
     }
+
+    # ADDING THIS TO MAKE UP FOR BAD SQL DATA
+    bad.data <- gg$price==0
+    gg <- gg[!bad.data,]
 
     if (is.null(btc)) {
        res <- dbSendQuery(con, paste("SELECT time, high, low, open, close, volume_from, volume_to, price FROM btc_prices WHERE time >= ", start.time-buffer*60, " AND time <= ", end.time, ";", sep=""))
