@@ -231,7 +231,7 @@ writer = csv.writer(open("pct_argmax.csv", "w"))
 # List of coins that we don't think performed well during model training/testing
 
 blacklisted_coins = open("blacklisted_coins.txt", "r").read().splitlines()
-
+#data_files=["2GIVE_predict.csv"]
 for fname in data_files:
     
     uscore = fname.find("_")

@@ -380,16 +380,17 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
 
 
 
-
-coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
+#coins = ["2GIVE"]
+#coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
 
 
 
 
 training_path = "training_data/"
 model_path = "models/"
-training_filename = "_data_oct_may_diff.csv"
-test1_filename = "_june_diff.csv"
+figs_path = "figs_test/"
+training_filename = "_oct_may_diff.csv"
+test1_filename = "_may_jun_diff.csv"
 lstm_layers = [200,100]
 epochs=30
 price_col=8
@@ -397,7 +398,7 @@ batch_size=450
 label_min=0
 label_max=15
 timesteps=1
-do_training=False
+do_training=True
 do_plotting=True
 cutoff = 0.95
 method_thresh_validation=0.8
@@ -444,7 +445,7 @@ for coin in coins:
 
     if do_training:
         print("-- Training model")
-        (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, "figs_test/"+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
+        (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, figs_path+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
 
         # Test saving the model
         model_json = model.to_json()
@@ -491,7 +492,7 @@ for coin in coins:
 
     if do_plotting:
         print("-- Plotting")
-        plot_predictions(x2, test_y, yhat_raw, yhat, "figs_test/"+coin+"_1_validation_graphs.png", "figs_test/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        plot_predictions(x2, test_y, yhat_raw, yhat, figs_path+coin+"_1_validation_graphs.png", figs_path+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
 
     (results, baseline) = compute_accuracy(np.average(yhat_raw, axis=1, weights=range(label_min, label_max)), test_y, 100)
 
@@ -528,7 +529,7 @@ for coin in coins:
         x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
     if timesteps <= 1:
-        (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, "figs_test/"+coin+"_2_validation_buys.png", strategy, method_params=method_params)
+        (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, figs_path+coin+"_2_validation_buys.png", strategy, method_params=method_params)
         
         print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
         #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
@@ -551,14 +552,14 @@ for coin in coins:
 
     if do_plotting:
         print("-- Plotting")
-        plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs_test/"+coin+"_3_test1_graphs.png", "figs_test/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        plot_predictions(x2, test_y2, yhat_raw2, yhat2, figs_path+coin+"_3_test1_graphs.png", figs_path+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
     #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
     #print("++ Test set 1: pct good: " + str(pct_good) + " Num good: " + str(num_good))
     #f.write("++ Test set 1:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
 
     if timesteps <= 1: # I don't know how to do this with 3D arrays...
         method_params={"method":"pct_gt", "thresh":method_thresh_test, "label_gt":3}
-        (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, "figs_test/"+coin+"_4_test1_buys.png", strategy, method_params=method_params)
+        (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, figs_path+coin+"_4_test1_buys.png", strategy, method_params=method_params)
         print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
         #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
         csvrow.extend([sum(pg), len(pg)])
