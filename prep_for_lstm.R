@@ -19,22 +19,29 @@ june.times <- c(1527811200, 1530403200)
 
 batch_list = list(
 
+  # list(
+  #   name="Oct to May",
+  #   root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
+  #   filename="_oct_may_diff.csv",
+  #   start.time=1506830400,
+  #   end.time=1525174760
+  # ),
+  # 
+  # list(
+  #   name="May to Jun",
+  #   root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
+  #   filename="_may_jun_diff.csv",
+  #   start.time=1525174760,
+  #   end.time=1528502400
+  # )
+  
   list(
-    name="Oct to May",
-    root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
-    filename="_oct_may_diff.csv",
-    start.time=1506830400,
-    end.time=1525174760
-  ),
-
-  list(
-    name="May to Jun",
-    root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
-    filename="_may_jun_diff.csv",
-    start.time=1525174760,
-    end.time=1528502400
-  )
-
+     name="Oct to May",
+     root_path="/Users/jake/projects/stocks/lstm_alpha/training_data/",
+     filename="_diff_test.csv",
+     start.time=1525174760-10*24*3600,
+     end.time=1525174760
+   )
 )
 
 run_min <- 60
@@ -121,7 +128,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     } else {
       macdvp[,i] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     }
-    rsis[,i] <- RSI(gg$price, n=floor(rsi.vals/2))
+    rsis[,i] <- RSI(gg$price, n=floor(v/2))
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
@@ -136,15 +143,16 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   rvrp2 <- rvrp.fun(gg, win.size=360)
   rvrp3 <- rvrp.fun(gg, win.size=720)
   rvrp4 <- rvrp.fun(gg, win.size=2880)
+  
+  names(aroons) <- paste("aroon.", rsi.vals, sep="")
+  names(aroonvp) <- paste("aroonvp.", rsi.vals, sep="")
+  names(macds) <- paste("macds.", rsi.vals, sep="")
+  names(macdv) <- paste("macdv.", rsi.vals, sep="")
+  names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
+  names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  
   d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
-  names(d) <- c(names(t.coin$gg), paste("rvrp.", 1:4, sep=""), 
-                paste("aroon.", 1:ncol(aroons), sep=""), 
-                paste("aroonvp.", 1:ncol(aroonvp), sep=""),
-                paste("macds.", 1:ncol(macds), sep=""),
-                paste("macdv.", 1:ncol(macdv), sep=""),
-                paste("macdvp.", 1:ncol(macdvp), sep=""),
-                paste("rsis.", 1:ncol(rsis), sep="")
-                )
+ 
   return(d)
 }
 
@@ -222,7 +230,7 @@ get_coin_names_from_db <- function() {
 
 #coins_to_save = get_coin_names_from_db()
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
-coins_to_save = c("BLOCK", "BRX", "DASH", "DTB")
+coins_to_save = c("2GIVE")
 
 times = unlist(lapply(batch_list, function(x) { x$end.time }))
 max.end.time = max(times)

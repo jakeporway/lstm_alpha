@@ -4,12 +4,15 @@ source("core_pump_library.R")
 source("utility_file.R")
 
 days_to_lookback=8
-end.time <- as.integer(Sys.time())
-end.time <- end.time-4*24*3600
-start.time <- end.time-24*3600*days_to_lookback
+#end.time <- as.integer(Sys.time())
+#end.time <- end.time-4*24*3600
+#start.time <- end.time-24*3600*days_to_lookback
 
-root_path="prediction_data/"
-filename="_predict.csv"
+start.time <- 1525174760-10*24*3600
+end.time <- 1525174760
+
+root_path="training_data/"
+filename="_test_diff_predict.csv"
 
 rsi.vals <- c(720, 1440, 2880)
 
@@ -54,7 +57,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   pgrt.scan <- 3500
   
-  gg <- t.coin$gg #[(real.start:end_idx),]
+  gg <- t.coin$gg[(real.start:end_idx),]
   
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
@@ -91,7 +94,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     } else {
       macdvp[,i] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     }
-    rsis[,i] <- RSI(gg$price, n=floor(rsi.vals/2))
+    rsis[,i] <- RSI(gg$price, n=floor(v/2))
   }
   
   # OLD VERSION: Values to ignore (NAs in the beginning, 0 labels at the end)
@@ -135,6 +138,7 @@ coins_to_save <- unlist(lapply(strsplit(coins_to_save,"_"), function(x) { touppe
 dbClearResult(res)
 dbDisconnect(con)
 
+coins_to_save=c("2GIVE")
 coins <- load.coins(coins_to_save, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
 btc <- load.coins("BTC", start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
 btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
@@ -164,7 +168,6 @@ for (t.coin in coins) {
   
   # Drop time, ttc.24 and ttp
   res <- res[,-c(1,11,12)]
-  #res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
   res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
   names(res)[c(1,2,3)] <- c("time", "btc.price", "btc.vol")
   res2 <- apply(res[,-c(1)], 2, diff)
