@@ -19,29 +19,21 @@ june.times <- c(1527811200, 1530403200)
 
 batch_list = list(
 
-  # list(
-  #   name="Oct to May",
-  #   root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
-  #   filename="_oct_may_diff.csv",
-  #   start.time=1506830400,
-  #   end.time=1525174760
-  # ),
-  # 
-  # list(
-  #   name="May to Jun",
-  #   root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
-  #   filename="_may_jun_diff.csv",
-  #   start.time=1525174760,
-  #   end.time=1528502400
-  # )
-  
   list(
-     name="Oct to May",
-     root_path="/Users/jake/projects/stocks/lstm_alpha/training_data/",
-     filename="_diff_test.csv",
-     start.time=1525174760-10*24*3600,
-     end.time=1525174760
-   )
+    name="Oct to May",
+    root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
+    filename="_oct_may_diff.csv",
+    start.time=1506830400,
+    end.time=1525174760
+  ),
+
+  list(
+    name="May to Jun",
+    root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
+    filename="_may_jun_diff.csv",
+    start.time=1525174760,
+    end.time=1528502400
+  )
 )
 
 run_min <- 60

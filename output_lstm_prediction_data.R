@@ -4,15 +4,12 @@ source("core_pump_library.R")
 source("utility_file.R")
 
 days_to_lookback=8
-#end.time <- as.integer(Sys.time())
-#end.time <- end.time-4*24*3600
-#start.time <- end.time-24*3600*days_to_lookback
+end.time <- as.integer(Sys.time())
+end.time <- end.time-4*24*3600
+start.time <- end.time-24*3600*days_to_lookback
 
-start.time <- 1525174760-10*24*3600
-end.time <- 1525174760
-
-root_path="training_data/"
-filename="_test_diff_predict.csv"
+root_path="prediction_data/"
+filename="_predict.csv"
 
 rsi.vals <- c(720, 1440, 2880)
 
