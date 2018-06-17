@@ -1,6 +1,6 @@
 
-import math
-import os, os.path
+import math, time
+import os, os.path, fnmatch
 import sys
 import numpy as np
 from numpy import concatenate
@@ -185,16 +185,16 @@ def plot_predictions(x, test_y, yhat_raw, yhat, plot_filename_graphs, plot_filen
     pyplot.savefig(plot_filename_graphs)
     pyplot.close()
 
-    pyplot.figure()
-    pyplot.suptitle(plot_filename_correlations[5:-4])
-    pyplot.subplot(2,1,1)
-    pyplot.plot(yhat, test_y, 'ro', alpha=0.007)
-    pyplot.title("Argmax")
-    pyplot.subplot(2,1,2)
-    pyplot.plot(pp, test_y, 'ro', alpha=0.007)
-    pyplot.title("Average")
-    pyplot.savefig(plot_filename_correlations)
-    pyplot.close()
+    #pyplot.figure()
+    #pyplot.suptitle(plot_filename_correlations[5:-4])
+    #pyplot.subplot(2,1,1)
+    #pyplot.plot(yhat, test_y, 'ro', alpha=0.007)
+    #pyplot.title("Argmax")
+   # pyplot.subplot(2,1,2)
+    #pyplot.plot(pp, test_y, 'ro', alpha=0.007)
+    #pyplot.title("Average")
+    #pyplot.savefig(plot_filename_correlations)
+    #pyplot.close()
 
 
 
@@ -301,6 +301,10 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
         label_gt = method_params["label_gt"]
         pp = np.sum(yhat_raw[:,label_gt:], axis=1)
         buy_idx = np.argwhere(pp > method_params["thresh"])[:,0]
+    if method == "argmax":
+        label_gt = method_params["label_gt"]
+        pp = np.argmax(yhat_raw, axis=1)
+        buy_idx = np.argwhere(pp >= label_gt)
 
     n = yhat_raw.shape[0]
     sell_idx = np.zeros(len(buy_idx))
@@ -379,37 +383,35 @@ def buy(test_X, yhat_raw, price_col, scaler, filename, strategy, method_params={
     return (buy_idx, sell_idx, pct_diff)
 
 
-
-
-
-
-coins = ["2GIVE", "ABY", "ADA", "ADT", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN"]
-
-
-
-
 training_path = "training_data/"
 model_path = "models/"
-training_filename = "_data_oct_may.csv"
-test1_filename = "_apr_may.csv"
-lstm_layers = [100,100]
-epochs=30
+figs_path = "figs_train/"
+training_filename = "_oct_may_diff.csv"
+test1_filename = "_may_jun_diff.csv"
+lstm_layers = [200,100]
+epochs=50
 price_col=8
 batch_size=450
 label_min=0
 label_max=15
 timesteps=1
-do_training=False
-do_plotting=False
+do_training=True
+do_plotting=True
+skip_fresh_models=True
+hours_for_model_to_expire=12
 cutoff = 0.95
+
+# Methods: avg_thresh, pct_gt, argmax
+method="argmax"
+label_gt=3
 method_thresh_validation=0.8
-method_thresh_test=0.6
+method_thresh_test=0.7
 
 strategy = {}
 strategy["pct_gain"]=0.15
 strategy["pct_loss"]=100
 strategy["days_to_hold"]=4
-results_file_base="_0.8_0.6_predict_may_results.csv"
+results_file_base="_"+str(method_thresh_validation)+"_"+str(method_thresh_test)+"_predict_100.100_results.csv"
 
 strategy["ignore_if_increased_by"]=0.08
 strategy["ignore_window_hours"]=36 # If we've seen 10%+ gains in the last 3 hours, don't buy
@@ -425,6 +427,15 @@ print("++ Writing results to " + results_file)
 f = csv.writer(open(results_file, "w"))
 f.writerow(["coin", "threshold", "sg_training", "nb_training", "sg_test1", "nb_test1"])
 
+data_files = os.listdir(training_path)
+training_files = [d for d in data_files if fnmatch.fnmatch(d, "*"+training_filename)]
+
+coins = [c.split("_")[0] for c in training_files]
+coins.sort()
+print("Found data for coins " + ", ".join(coins))
+
+#coins = ["1ST"]
+
 for coin in coins:
     
     csvrow = []
@@ -434,7 +445,21 @@ for coin in coins:
     if coin == "" or len(sys.argv) > 1:
         coin = str(sys.argv[1])
 
-    
+    # Make sure both the training and testing file actually exist
+    if not os.path.isfile(training_path+coin+training_filename):
+        print(training_path+coin+training_filename+" not found. Skipping this coin.")
+        continue
+    if not os.path.isfile(training_path+coin+test1_filename):
+        print(training_path+coin+test1_filename+" not found. Skipping this coin")
+        continue
+  
+
+    # Basically if we created models within the last 
+    if skip_fresh_models:
+          model_file = model_path+coin+"_model.json"
+          if os.path.isfile(model_file) and int(time.time()) - os.path.getmtime(model_file) < 3600*hours_for_model_to_expire:
+              print("skip_fresh_models is activated and this model was built within the last " + str(hours_for_model_to_expire) + " hours. Skipping.")
+              continue
     print("-- Loading data")
     (train_X, train_y, test_X, test_y, scaler, n_col) = load_training_set(training_path+coin+training_filename, label_min=label_min, label_max=int(math.fabs(label_min)+label_max), n_in=timesteps)
 
@@ -444,7 +469,7 @@ for coin in coins:
 
     if do_training:
         print("-- Training model")
-        (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, "figs_test/"+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
+        (history, model) = train_model(train_X, train_y, test_X, test_y, epochs, batch_size, figs_path+coin+"_0_train_test_error.png", lstm_layers, dense_layer=int(math.fabs(label_min)+label_max))
 
         # Test saving the model
         model_json = model.to_json()
@@ -491,7 +516,7 @@ for coin in coins:
 
     if do_plotting:
         print("-- Plotting")
-        plot_predictions(x2, test_y, yhat_raw, yhat, "figs_test/"+coin+"_1_validation_graphs.png", "figs_test/"+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        plot_predictions(x2, test_y, yhat_raw, yhat, figs_path+coin+"_1_validation_graphs.png", figs_path+coin+"_2_validation_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
 
     (results, baseline) = compute_accuracy(np.average(yhat_raw, axis=1, weights=range(label_min, label_max)), test_y, 100)
 
@@ -520,7 +545,7 @@ for coin in coins:
 
     
     #method_params={"method":"avg_thresh","thresh":best_row[0], "label_max":label_max}
-    method_params={"method":"pct_gt", "thresh":method_thresh_validation, "label_gt":3}
+    method_params={"method":method, "thresh":method_thresh_validation, "label_gt":label_gt}
 
     if timesteps > 1:
         x2 = test_X.reshape((test_X.shape[0], timesteps, n_col))
@@ -528,7 +553,7 @@ for coin in coins:
         x2 = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
     if timesteps <= 1:
-        (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, "figs_test/"+coin+"_2_validation_buys.png", strategy, method_params=method_params)
+        (bi, si, pg) = buy(x2, yhat_raw, price_col, scaler, figs_path+coin+"_2_validation_buys.png", strategy, method_params=method_params)
         
         print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
         #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
@@ -548,14 +573,14 @@ for coin in coins:
 
     if do_plotting:
         print("-- Plotting")
-        plot_predictions(x2, test_y2, yhat_raw2, yhat2, "figs_test/"+coin+"_3_test1_graphs.png", "figs_test/"+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
+        plot_predictions(x2, test_y2, yhat_raw2, yhat2, figs_path+coin+"_3_test1_graphs.png", figs_path+coin+"_4_test1_correlations.png", price_col=price_col, label_min=label_min, label_max=label_max)
     #(num_good, pct_good) = test_accuracy(np.average(yhat_raw2, axis=1, weights=range(label_min, label_max)), test_y2, final_threshold, 3)
     #print("++ Test set 1: pct good: " + str(pct_good) + " Num good: " + str(num_good))
     #f.write("++ Test set 1:  pct good: " + str(pct_good) + "  num good: " + str(num_good) + "\n\n")
 
     if timesteps <= 1: # I don't know how to do this with 3D arrays...
-        method_params={"method":"pct_gt", "thresh":method_thresh_test, "label_gt":3}
-        (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, "figs_test/"+coin+"_4_test1_buys.png", strategy, method_params=method_params)
+        method_params={"method":method, "thresh":method_thresh_test, "label_gt":label_gt}
+        (bi, si, pg) = buy(x2, yhat_raw2, price_col, scaler, figs_path+coin+"_4_test1_buys.png", strategy, method_params=method_params)
         print("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg)))
         #f.write("Sum gain: [" + str(sum(pg)) + "] Num buys: " + str(len(pg))+"\n")
         csvrow.extend([sum(pg), len(pg)])

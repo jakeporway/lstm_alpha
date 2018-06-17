@@ -1,5 +1,3 @@
-#!/usr/bin/ipython
-
 import math
 import sys, os, os.path, fnmatch, time
 import numpy as np
@@ -202,7 +200,7 @@ def buy(test_X, yhat_raw, price_col, times, strategy, scaler, method_params={}):
         return False
 
 # TODO: Replace this with a read straight from MySQL
-fig_path = "figs/"
+fig_path = "figs_test/"
 model_path = "models/"
 data_path = "prediction_data/"
 filename = "_predict.csv"
@@ -233,7 +231,6 @@ writer = csv.writer(open("pct_argmax.csv", "w"))
 # List of coins that we don't think performed well during model training/testing
 
 blacklisted_coins = open("blacklisted_coins.txt", "r").read().splitlines()
-
 
 for fname in data_files:
     
