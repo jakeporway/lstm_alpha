@@ -32,7 +32,7 @@ batch_list = list(
     root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
     filename="_may_jun_diff.csv",
     start.time=1525174760,
-    end.time=1528502400
+    end.time=1528761600
   )
 )
 
@@ -171,7 +171,13 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
   
   for (t.coin in coins_to_save) {
     print(paste("Writing csv for", t.coin))
-    
+    fname <- paste(root_path,"/",t.coin, filename, sep="")
+
+    if (file.exists(fname)) {
+       print("CSV already exists. Skipping.")
+       next
+    }
+
     coin <- load.coin(t.coin, start.time, end.time, features.n, btc, max.end.time)
     if (is.null(coin)) {
        next
@@ -206,7 +212,7 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     res2 <- apply(res, 2, diff)
     res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
     names(res)[ncol(res)] <- "label"
-    fname <- paste(root_path,"/",t.coin$coin, filename, sep="")
+    
     print(paste("Writing", fname))
     write.csv(res, file=fname, row.names=F)
   }
@@ -224,8 +230,8 @@ get_coin_names_from_db <- function() {
 }
 
 
-coins_to_save = c("2GIVE")
-#coins_to_save = get_coin_names_from_db()
+
+coins_to_save = get_coin_names_from_db()
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
 
 

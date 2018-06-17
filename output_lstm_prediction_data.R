@@ -5,7 +5,6 @@ source("utility_file.R")
 
 days_to_lookback=8
 end.time <- as.integer(Sys.time())
-end.time <- end.time-4*3600
 start.time <- end.time-24*3600*days_to_lookback
 
 root_path="prediction_data/"
@@ -135,7 +134,6 @@ coins_to_save <- unlist(lapply(strsplit(coins_to_save,"_"), function(x) { touppe
 dbClearResult(res)
 dbDisconnect(con)
 
-coins_to_save=c("2GIVE")
 coins <- load.coins(coins_to_save, start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
 btc <- load.coins("BTC", start.time, end.time, features.n, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
 btc2 <- btc[["BTC"]]$gg[,c("time", "price", "volume_to")]
