@@ -3,6 +3,8 @@ source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
 
+# ADDING CHANGES TO TRY NEW FEATURES
+
 oct.times <- c(1506830400, 1509508799)
 nov.times <- c(1509508800, 1512104399)
 dec.times <- c(1512104400, 1514782799)
@@ -121,6 +123,10 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
       macdvp[,i] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     }
     rsis[,i] <- RSI(gg$price, n=floor(v/2))
+    
+    # ADD EVERYTHING FROM TTR
+    
+    
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
@@ -207,10 +213,11 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
     names(res)[c(1,2)] <- c("btc.price", "btc.vol")
     
+    # 6/18 taking out the diffs for right now
     # Add diffs of all variables too
-    res2 <- apply(res, 2, diff)
-    res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
-    names(res)[ncol(res)] <- "label"
+    # res2 <- apply(res, 2, diff)
+    # res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+    # names(res)[ncol(res)] <- "label"
     
     print(paste("Writing", fname))
     write.csv(res, file=fname, row.names=F)
@@ -228,17 +235,9 @@ get_coin_names_from_db <- function() {
   return(coins_to_save)
 }
 
-
-
-<<<<<<< HEAD
-#coins_to_save = get_coin_names_from_db()
-coins_to_save = c("MANA")
-=======
 coins_to_save = get_coin_names_from_db()
 coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK")
->>>>>>> d48f4d29b75f8df736ec494f0b13075fcf449aac
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
-
 
 times = unlist(lapply(batch_list, function(x) { x$end.time }))
 max.end.time = max(times)
