@@ -83,7 +83,7 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   pgrt.scan <- 3500
   
-  gg <- t.coin$gg[(real.start:end_idx),]
+  gg <- t.coin$gg#[(real.start:end_idx),]
   
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
@@ -143,7 +143,9 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
   names(rsis) <- paste("rsis.", rsi.vals, sep="")
   
-  d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
+  #d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
+  # MAJOR ERROR! Can't line up t.coin$gg[idx,] against rvrp[idx]. t.coin$gg has already been trimmed to gg. Oh no, does this data work at all or were we accidentally encoding the future...?
+  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
  
   return(d)
 }
@@ -232,6 +234,7 @@ get_coin_names_from_db <- function() {
 
 
 coins_to_save = get_coin_names_from_db()
+coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK")
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
 
 

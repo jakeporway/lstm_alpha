@@ -118,7 +118,8 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   #d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
   # NEW VERSION: Trying to take the end of all of this data
-  d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
+  # MAJOR ERROR: used to be t.coin$gg[idx,], as above. That would copy the WRONG gg values alongside the aroons! 
+  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
   return(d)
 }
 
