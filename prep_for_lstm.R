@@ -99,6 +99,25 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   macdvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rsis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rvrp <- rvrp.fun(gg, win.size=rvrp.length)
+
+  # ALL THE EXTRA TTR STUFF
+    adxs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    atrs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    bbandss <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))	
+    ccis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    chaikinads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    chaikinvs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    cmfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    cmos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    dvis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    ksts <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    sars <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    stochs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    tdis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    uos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    vhfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    wads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    wprs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   
   for (i in 1:length(rsi.vals)) {
     v <- rsi.vals[i]
@@ -125,8 +144,24 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     rsis[,i] <- RSI(gg$price, n=floor(v/2))
     
     # ADD EVERYTHING FROM TTR
-    
-    
+    adxs[,i] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,4]
+    atrs[,i] <- ATR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,2]
+    ccis[,i] <- CCI(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    chaikinads[,i] <- chaikinAD(cbind(gg$high, gg$low, gg$close), gg$volume_from)
+    chaikinvs[,i] <- chaikinVolatility(cbind(gg$high, gg$low), n=floor(v/30))
+    cmfs[,i] <- CMF(cbind(gg$high, gg$low, gg$close), gg$volume_from, n=floor(v/30))
+    cmos[,i] <- CMO(cbind(gg$price), n=floor(v/30))
+    cmos[,i][is.na(cmos[,i])] <- 0
+    dvis[,i] <- DVI(cbind(gg$price), n=floor(v/30))[,2]
+    ksts[,i] <- KST(cbind(gg$price))[,2]
+    sars[,i] <- SAR(cbind(gg$high, gg$low))
+    stochs[,i] <- SMI(cbind(gg$high, gg$low, gg$close), n=floor(v/4), nFast=floor(v/20), nSlow=floor(v/2))[,2]
+    tdis[,i] <- TDI(cbind(gg$price), n=floor(v/30))[,1]
+    uos[,i] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close))
+    uos[,i][is.na(uos[,i])] <- 0
+    vhfs[,i] <- VHF(gg$price, n=floor(v/30))
+    wprs[,i] <- WPR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
@@ -149,7 +184,14 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
   names(rsis) <- paste("rsis.", rsi.vals, sep="")
   
-  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,]) 
+  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], 
+      		 aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], 
+		 rsis[idx,], adxs[idx,], atrs[idx,], ccis[idx,], chaikinads[idx,], chaikinvs[idx,], cmfs[idx,], cmos[idx,], dvis[idx,], 
+		 ksts[idx,], sars[idx,], stochs[idx,], tdis[idx,], uos[idx,], vhfs[idx,], wprs[idx,]) 
+
+  # HACK: Get rid of all NAs so we don't screw stuff up in python
+  # Brute force
+  d[is.na(d)] <- -1
   return(d)
 }
 
@@ -236,7 +278,8 @@ get_coin_names_from_db <- function() {
 }
 
 coins_to_save = get_coin_names_from_db()
-coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK")
+#coins_to_save =c("MANA")
+coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK", "MANA")
 #coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
 
 times = unlist(lapply(batch_list, function(x) { x$end.time }))
