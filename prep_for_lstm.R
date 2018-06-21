@@ -90,9 +90,9 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   
   #Aroon of price
   ncols=3
-  aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
+  plain.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
   #Aroon of rvrp
-  aroonvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
+  rvrp.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
   # # MACD of price
   # macds <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   # # MACD of volume
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    aroons[,sidx:(sidx+ncols-1)] <- aroon(cbind(gg$high, gg$low), n=v)
-    aroonvp[,sidx:(sidx+ncols-1)] <- aroon(rvrp, n=v)
+    plain.mat[,sidx:(sidx+ncols-1)] <- aroon(cbind(gg$high, gg$low), n=v)
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- aroon(rvrp, n=v)
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
@@ -192,7 +192,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   # Brute force
   
   
-  d = data.frame(gg[idx,], rvrp[idx], aroons[idx,], aroonvp[idx,])
+  d = data.frame(gg[idx,], rvrp[idx], plain.mat[idx,], rvrp.mat[idx,])
   d[is.na(d)] <- -1
   return(d)
 }
@@ -403,9 +403,9 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     
     # 6/18 taking out the diffs for right now
     # Add diffs of all variables too
-    # res2 <- apply(res, 2, diff)
-    # res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
-    # names(res)[ncol(res)] <- "label"
+     res2 <- apply(res, 2, diff)
+     res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
+     names(res)[ncol(res)] <- "label"
     
     print(paste("Writing", fname))
     write.csv(res, file=fname, row.names=F)
