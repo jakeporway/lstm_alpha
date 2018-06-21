@@ -34,7 +34,7 @@ batch_list = list(
     root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
     filename="_may_jun_diff.csv",
     start.time=1525174760,
-    end.time=1525174760
+    end.time=1529107200
   )
 )
 
