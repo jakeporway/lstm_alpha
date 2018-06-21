@@ -34,7 +34,7 @@ batch_list = list(
     root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
     filename="_may_jun_diff.csv",
     start.time=1525174760,
-    end.time=1528761600
+    end.time=1525174760
   )
 )
 
@@ -42,7 +42,7 @@ run_min <- 60
 pct_gain_sell <- 0.11
 stop_limit <- 0.30
 
-rsi.vals <- c(720, 1440, 2880)
+rsi.vals <- c(8, 50, 200, 720, 1440, 2880)
 
 win.sizes <- c(1440)
 features.n <- 2000
@@ -52,6 +52,151 @@ ttc.time = 24
 alpha = 26
 split.size = 30
 rvrp.length <- 1440
+
+
+convert.only.one.feature <- function(t.coin, rvrp.length) {
+  
+  real.start <- tail(rsi.vals,1)
+  if (real.start < 1) {
+    return(c())
+  }
+  end_idx <- nrow(t.coin$gg)
+  
+  ma.alarm.lag <- 5
+  macdv.tot.lag <- 50
+  macdv.window <- 120
+  macdv.pos.thresh <- 2.5
+  macdv.neg.thresh <- -2.5
+  
+  aroonvp.window <- 120
+  aroonvp.left.pos <- 20
+  
+  rsi.lag <- 120
+  
+  ma.alarm.thresh <- -2.5e5
+  macdv.thresh <- -80
+  aroonvp.thresh <- -100
+  avp.thresh <- 140
+  feature.step <- 20
+  rsi.thresh <- 60
+  
+  feature.window <- 360
+  trim.1 <- 20
+  trim.2 <- feature.window/trim.1
+  
+  pgrt.scan <- 3500
+  
+  gg <- t.coin$gg#[(real.start:end_idx),]
+  
+  #Aroon of price
+  ncols=3
+  aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
+  #Aroon of rvrp
+  aroonvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
+  # # MACD of price
+  # macds <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # # MACD of volume
+  # macdv <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # # MACD of rvrp
+  # macdvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # rsis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  rvrp <- rvrp.fun(gg, win.size=rvrp.length)
+  # 
+  # # ALL THE EXTRA TTR STUFF
+  # adxs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # atrs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # bbandss <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))	
+  # ccis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # chaikinads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # chaikinvs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # cmfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # cmos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # dvis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # ksts <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # sars <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # stochs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # tdis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # uos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # vhfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # wads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  # wprs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  
+  for (i in 1:length(rsi.vals)) {
+    
+    v <- rsi.vals[i]
+    print(v)
+    sidx <- (i-1)*ncols+1
+    aroons[,sidx:(sidx+ncols-1)] <- aroon(cbind(gg$high, gg$low), n=v)
+    aroonvp[,sidx:(sidx+ncols-1)] <- aroon(rvrp, n=v)
+    # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
+    # if (sum(gg$volume_from) == 0) {
+    #   macdv[,i] <- rep(0, nrow(macdv)) 
+    # } else {
+    #   macdv[,i] <- tryCatch({
+    #     MACD(gg$volume_from, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]},
+    #     warning = function(war) {},
+    #     error = function(err) {
+    #       print(paste("Error computing MACDv:", err, ". Using all 0s"))
+    #       rep(0, nrow(macdv)) 
+    #     })
+    # }
+    # if (sum(rvrp) == 0) {
+    #   macdvp[,i] <- rep(0, nrow(macdvp))
+    # } else {
+    #   macdvp[,i] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
+    # }
+    # rsis[,i] <- RSI(gg$price, n=floor(v/2))
+    # 
+    # # ADD EVERYTHING FROM TTR
+    # adxs[,i] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,4]
+    # atrs[,i] <- ATR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,2]
+    # ccis[,i] <- CCI(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    # chaikinads[,i] <- chaikinAD(cbind(gg$high, gg$low, gg$close), gg$volume_from)
+    # chaikinvs[,i] <- chaikinVolatility(cbind(gg$high, gg$low), n=floor(v/30))
+    # cmfs[,i] <- CMF(cbind(gg$high, gg$low, gg$close), gg$volume_from, n=floor(v/30))
+    # cmos[,i] <- CMO(cbind(gg$price), n=floor(v/30))
+    # cmos[,i][is.na(cmos[,i])] <- 0
+    # dvis[,i] <- DVI(cbind(gg$price), n=floor(v/30))[,2]
+    # ksts[,i] <- KST(cbind(gg$price))[,2]
+    # sars[,i] <- SAR(cbind(gg$high, gg$low))
+    # stochs[,i] <- SMI(cbind(gg$high, gg$low, gg$close), n=floor(v/4), nFast=floor(v/20), nSlow=floor(v/2))[,2]
+    # tdis[,i] <- TDI(cbind(gg$price), n=floor(v/30))[,1]
+    # uos[,i] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close))
+    # uos[,i][is.na(uos[,i])] <- 0
+    # vhfs[,i] <- VHF(gg$price, n=floor(v/30))
+    # wprs[,i] <- WPR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    
+  }
+  
+  # Values to ignore (NAs in the beginning, 0 labels at the end)
+  idx <- (tail(rsi.vals,1)*2+10):(nrow(gg))
+  
+  # 
+  # rvrp2 <- rvrp.fun(gg, win.size=360)
+  # rvrp3 <- rvrp.fun(gg, win.size=720)
+  # rvrp4 <- rvrp.fun(gg, win.size=2880)
+  # 
+  # names(aroons) <- paste("aroon.", rsi.vals, sep="")
+  # names(aroonvp) <- paste("aroonvp.", rsi.vals, sep="")
+  # names(macds) <- paste("macds.", rsi.vals, sep="")
+  # names(macdv) <- paste("macdv.", rsi.vals, sep="")
+  # names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
+  # names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  # 
+  # d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], 
+  #                aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], 
+  #                rsis[idx,], adxs[idx,], atrs[idx,], ccis[idx,], chaikinads[idx,], chaikinvs[idx,], cmfs[idx,], cmos[idx,], dvis[idx,], 
+  #                ksts[idx,], sars[idx,], stochs[idx,], tdis[idx,], uos[idx,], vhfs[idx,], wprs[idx,]) 
+  # 
+  # HACK: Get rid of all NAs so we don't screw stuff up in python
+  # Brute force
+  
+  
+  d = data.frame(gg[idx,], rvrp[idx], aroons[idx,], aroonvp[idx,])
+  d[is.na(d)] <- -1
+  return(d)
+}
+
 
 convert.for.lstm <- function(t.coin, rvrp.length) {
   
@@ -99,6 +244,25 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   macdvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rsis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rvrp <- rvrp.fun(gg, win.size=rvrp.length)
+
+  # ALL THE EXTRA TTR STUFF
+    adxs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    atrs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    bbandss <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))	
+    ccis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    chaikinads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    chaikinvs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    cmfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    cmos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    dvis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    ksts <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    sars <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    stochs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    tdis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    uos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    vhfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    wads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+    wprs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   
   for (i in 1:length(rsi.vals)) {
     v <- rsi.vals[i]
@@ -125,8 +289,24 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     rsis[,i] <- RSI(gg$price, n=floor(v/2))
     
     # ADD EVERYTHING FROM TTR
-    
-    
+    adxs[,i] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,4]
+    atrs[,i] <- ATR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,2]
+    ccis[,i] <- CCI(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    chaikinads[,i] <- chaikinAD(cbind(gg$high, gg$low, gg$close), gg$volume_from)
+    chaikinvs[,i] <- chaikinVolatility(cbind(gg$high, gg$low), n=floor(v/30))
+    cmfs[,i] <- CMF(cbind(gg$high, gg$low, gg$close), gg$volume_from, n=floor(v/30))
+    cmos[,i] <- CMO(cbind(gg$price), n=floor(v/30))
+    cmos[,i][is.na(cmos[,i])] <- 0
+    dvis[,i] <- DVI(cbind(gg$price), n=floor(v/30))[,2]
+    ksts[,i] <- KST(cbind(gg$price))[,2]
+    sars[,i] <- SAR(cbind(gg$high, gg$low))
+    stochs[,i] <- SMI(cbind(gg$high, gg$low, gg$close), n=floor(v/4), nFast=floor(v/20), nSlow=floor(v/2))[,2]
+    tdis[,i] <- TDI(cbind(gg$price), n=floor(v/30))[,1]
+    uos[,i] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close))
+    uos[,i][is.na(uos[,i])] <- 0
+    vhfs[,i] <- VHF(gg$price, n=floor(v/30))
+    wprs[,i] <- WPR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
@@ -149,7 +329,14 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
   names(rsis) <- paste("rsis.", rsi.vals, sep="")
   
-  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,]) 
+  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], 
+      		 aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], 
+		 rsis[idx,], adxs[idx,], atrs[idx,], ccis[idx,], chaikinads[idx,], chaikinvs[idx,], cmfs[idx,], cmos[idx,], dvis[idx,], 
+		 ksts[idx,], sars[idx,], stochs[idx,], tdis[idx,], uos[idx,], vhfs[idx,], wprs[idx,]) 
+
+  # HACK: Get rid of all NAs so we don't screw stuff up in python
+  # Brute force
+  d[is.na(d)] <- -1
   return(d)
 }
 
@@ -191,7 +378,8 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     if (is.null(t.coin)) {
        next
     }
-    res <- convert.for.lstm(t.coin, rvrp.length)
+    #res <- convert.for.lstm(t.coin, rvrp.length)
+    res <- convert.only.one.feature(t.coin, rvrp.length)
     if (!("label" == names(res)[13])) {
       print("skipping") 
       next
@@ -236,7 +424,10 @@ get_coin_names_from_db <- function() {
 }
 
 coins_to_save = get_coin_names_from_db()
-coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK")
+
+#coins_to_save =c("MANA")
+coins_to_save=c("2GIVE", "EMC", "BRX", "BAT", "ANT", "CLOAK", "MANA")
+#coins_to_save = c("2GIVE", "ABY", "ADA", "ADT", "ADX", "AEON", "AMP", "ANT", "ARDR", "ARK", "AUR", "BAT", "BAY", "BCY", "BITB", "BLITZ", "BLK", "BLOCK", "BNT", "BRK", "BRX", "BTG", "BURST", "BYC", "CANN", "CFI", "CLAM", "CLOAK", "COVAL", "CRB", "CRW", "CURE", "CVC", "DASH", "DCR", "DCT", "DGB", "DMD", "DNT", "DOGE", "DOPE", "DTB", "DYN", "EBST", "EDG", "EFL", "EGC", "EMC", "EMC2", "ENG", "ENRG", "ERC", "ETC", "EXCL", "EXP", "FCT", "FLDC", "FLO", "FTC", "GAM", "GAME", "GBG", "GBYTE", "GEO", "GLD", "GNO", "GNT", "GOLOS", "GRC", "GRS", "GUP", "HMQ", "INCNT", "IOC", "ION", "IOP", "KMD", "KORE", "LBC", "LGD", "LMC", "LSK", "LUN", "MANA", "MCO", "MEME", "MER", "MLN", "MONA", "MUE", "MUSIC", "NAV", "NBT", "NEO", "NEOS", "NLG", "NMR", "NXC", "NXS", "NXT", "OK", "OMG", "OMNI", "PART", "PAY", "PINK", "PIVX", "POT", "POWR", "PPC", "PTC", "PTOY", "QRL", "QTUM", "QWARK", "RADS", "RBY", "RCN", "RDD", "REP", "RLC", "SALT", "SC", "SEQ", "SHIFT", "SIB", "SLR", "SLS", "SNT", "SPHR", "SPR", "STEEM", "STORJ", "STRAT", "SWIFT", "SWT", "SYNX", "SYS", "THC", "TIX", "TKS", "TRST", "TRUST", "TX", "UBQ", "UKG", "UNB", "VIA", "VIB", "VRC", "VRM", "VTC", "VTR", "WAVES", "WINGS", "XCP", "XDN", "XEL", "XEM", "XLM", "XMG", "XMR", "XMY", "XRP", "XST", "XVG", "XWC", "XZC", "ZCL", "ZEC", "ZEN")
 
 
 times = unlist(lapply(batch_list, function(x) { x$end.time }))
