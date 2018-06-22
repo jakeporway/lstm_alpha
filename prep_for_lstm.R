@@ -127,7 +127,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     print(v)
     sidx <- (i-1)*ncols+1
     plain.mat[,sidx:(sidx+ncols-1)] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- ADX(rvrp, n=floor(v/10))
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- ADX(cbind(rvrp, rvrp, rvrp), n=floor(v/10))
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
