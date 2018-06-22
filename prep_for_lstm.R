@@ -89,7 +89,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   gg <- t.coin$gg#[(real.start:end_idx),]
   
   #Aroon of price
-  ncols=3
+  ncols=2
   plain.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
   #Aroon of rvrp
   rvrp.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    plain.mat[,sidx:(sidx+ncols-1)] <- aroon(cbind(gg$high, gg$low), n=v)
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- aroon(rvrp, n=v)
+    plain.mat[,sidx:(sidx+ncols-1)] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
