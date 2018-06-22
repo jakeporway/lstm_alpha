@@ -42,7 +42,7 @@ run_min <- 60
 pct_gain_sell <- 0.11
 stop_limit <- 0.30
 
-rsi.vals <- c(8, 50, 200, 720, 1440, 2880)
+rsi.vals <- c(50, 200, 720, 1440, 2880)
 
 win.sizes <- c(1440)
 features.n <- 2000
@@ -89,7 +89,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   gg <- t.coin$gg#[(real.start:end_idx),]
   
   #Aroon of price
-  ncols=2
+  ncols=4
   plain.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
   #Aroon of rvrp
   rvrp.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    plain.mat[,sidx:(sidx+ncols-1)] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))
+    plain.mat[,sidx:(sidx+ncols-1)] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- ADX(rvrp, n=floor(v/10))
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
