@@ -34,7 +34,7 @@ batch_list = list(
     root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
     filename="_may_jun_diff.csv",
     start.time=1525174760,
-    end.time=1529107200
+    end.time=1529280000
   )
 )
 
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    plain.mat[,sidx:(sidx+ncols-1)] <- SMI(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- SMI(cbind(rvrp, rvrp, rvrp), n=floor(v/10))
+    plain.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(rvrp, rvrp, rvrp), n=floor(v/10))
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
