@@ -337,6 +337,9 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   # HACK: Get rid of all NAs so we don't screw stuff up in python
   # Brute force
   d[is.na(d)] <- -1
+  for (m in 1:ncol(d)) {
+    d[is.infinite(d[,m]),m] <- -1
+  }
   return(d)
 }
 
