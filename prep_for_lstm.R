@@ -1,4 +1,4 @@
- # pull data from our DB and add features for LSTM training
+# pull data from our DB and add features for LSTM training
 source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    plain.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(rvrp, rvrp, rvrp), n=floor(v/10))
+    plain.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close))
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(rvrp, rvrp, rvrp))
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
