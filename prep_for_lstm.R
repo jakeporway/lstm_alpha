@@ -42,7 +42,7 @@ run_min <- 60
 pct_gain_sell <- 0.11
 stop_limit <- 0.30
 
-rsi.vals <- c(50, 200, 720, 1440, 2880)
+rsi.vals <- c(200, 720, 1440, 2880)
 
 win.sizes <- c(1440)
 features.n <- 2000
@@ -201,7 +201,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
 }
 
 
-convert.for.lstm <- function(t.coin, rvrp.length) {
+convert.for.lstm <- function(t.coin, rvrp.length, windowing=1) {
   
   real.start <- tail(rsi.vals,1)
   if (real.start < 1) {
@@ -235,6 +235,23 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   gg <- t.coin$gg#[(real.start:end_idx),]
   
+  
+  
+  
+  if (windowing > 1) {
+    new.gg <- data.frame(matrix(0, ncol=ncol(gg), nrow=floor(nrow(gg)/windowing)))
+    for (i in colnames(gg)) {
+      if (i == "label") {
+        next
+      }
+      else {
+        new.gg[,i] <- rollapply(gg[,i], windowing, mean, by=windowing)
+      }
+    }
+    new.gg[,"label"] <- rollapply(gg[,"label"], windowing, max, by=windowing)
+  }  
+  gg <- new.gg[windowing:nrow(new.gg),]  
+  
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   #Aroon of rvrp
@@ -246,8 +263,8 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   # MACD of rvrp
   macdvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rsis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
-  rvrp <- rvrp.fun(gg, win.size=rvrp.length)
-
+  
+  
   # ALL THE EXTRA TTR STUFF
     adxs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
     atrs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
@@ -267,6 +284,9 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
     wads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
     wprs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   
+  
+  rvrp <- rvrp.fun(gg, win.size=rvrp.length)
+    
   for (i in 1:length(rsi.vals)) {
     v <- rsi.vals[i]
     zz <- cbind(gg$high, gg$low)
