@@ -403,14 +403,11 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     }
     #res <- convert.for.lstm(t.coin, rvrp.length)
     res <- convert.only.one.feature(t.coin, rvrp.length)
-    if (!("label" == names(res)[13])) {
-      print("skipping") 
-      next
-    }
+    label.col <- which(colnames(res)=="label")
     times[[t.coin$coin]] <- res$time
     
     # put label last
-    res <- res[,c(setdiff(1:ncol(res),13), 13)]
+    res <- res[,c(setdiff(1:ncol(res),label.col), label.col)]
     
     t1 <- btc2$time
     t2 <- res$time
