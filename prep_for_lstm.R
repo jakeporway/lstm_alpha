@@ -404,8 +404,8 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     if (is.null(t.coin)) {
        next
     }
-    #res <- convert.for.lstm(t.coin, rvrp.length)
-    res <- convert.only.one.feature(t.coin, rvrp.length)
+    res <- convert.for.lstm(t.coin, rvrp.length, windowing=5)
+    #res <- convert.only.one.feature(t.coin, rvrp.length)
     if (!("label" == names(res)[13])) {
       print("skipping") 
       next
