@@ -105,11 +105,12 @@ rvrp.fun <- function(x, lag=1, win.size=30, buffer=100) {
   
   # THIS IS THE PART I COMMENTED OUT TO MAKE THE NA RVRP WARNING GO AWAY.
   # CONSIDER PUTTING THIS BACK IF PERFORMANCE IS LOW
-  #diff.price <- c(diff(x$price.n, lag=lag), rep(0,lag))
-  #pct.price <- diff.price/x$price.n
+  # Update 7/4 - I got rid of 0 entries in the DB, so I'm hoping this helps and we can go back to this
+  diff.price <- c(diff(x$price.n, lag=lag), rep(0,lag))
+  pct.price <- diff.price/x$price.n
   
-  diff.price <- c(diff(x$price, lag=lag), rep(0,lag))
-  pct.price <- diff.price/x$price
+  #diff.price <- c(diff(x$price, lag=lag), rep(0,lag))
+  #pct.price <- diff.price/x$price
 
   cum.vol <- cumsum(x$nmvol)
   pct.vol <- x$nmvol/cum.vol
