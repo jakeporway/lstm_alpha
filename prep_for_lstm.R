@@ -1,4 +1,4 @@
- # pull data from our DB and add features for LSTM training
+# pull data from our DB and add features for LSTM training
 source("pump_features.R")
 source("core_pump_library.R")
 source("utility_file.R")
@@ -89,7 +89,7 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   gg <- t.coin$gg#[(real.start:end_idx),]
   
   #Aroon of price
-  ncols=2
+  ncols=3
   plain.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
   #Aroon of rvrp
   rvrp.mat <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)*ncols))
@@ -126,8 +126,8 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
     v <- rsi.vals[i]
     print(v)
     sidx <- (i-1)*ncols+1
-    plain.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close), n=floor(v/10))
-    rvrp.mat[,sidx:(sidx+ncols-1)] <- ultimateOscillator(cbind(rvrp, rvrp, rvrp), n=floor(v/10))
+    plain.mat[,sidx:(sidx+ncols-1)] <- DVI(gg$price)
+    rvrp.mat[,sidx:(sidx+ncols-1)] <- DVI(rvrp)
     # macds[,i] <- MACD(gg$price, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     # if (sum(gg$volume_from) == 0) {
     #   macdv[,i] <- rep(0, nrow(macdv)) 
@@ -194,6 +194,9 @@ convert.only.one.feature <- function(t.coin, rvrp.length) {
   
   d = data.frame(gg[idx,], rvrp[idx], plain.mat[idx,], rvrp.mat[idx,])
   d[is.na(d)] <- -1
+  for (m in 1:ncol(d)) {
+      d[is.infinite(d[,m]),m] <- -1
+  }
   return(d)
 }
 
@@ -401,6 +404,7 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     if (is.null(t.coin)) {
        next
     }
+
     #res <- convert.for.lstm(t.coin, rvrp.length)
     res <- convert.only.one.feature(t.coin, rvrp.length)
     label.col <- which(colnames(res)=="label")
