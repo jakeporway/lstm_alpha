@@ -11,7 +11,7 @@ start.time <- end.time-24*3600*days_to_lookback
 root_path="prediction_data/"
 filename="_predict.csv"
 
-rsi.vals <- c(720, 1440, 2880)
+rsi.vals <- c(200, 720, 1440, 2880)
 
 win.sizes <- c(1440)
 features.n <- 2000
@@ -22,7 +22,9 @@ alpha = 26
 split.size = 30
 rvrp.length <- 1440
 
-convert.for.lstm <- function(t.coin, rvrp.length) {
+windowing <- 5
+
+convert.for.lstm <- function(t.coin, rvrp.length, windowing=1) {
   
   real.start <- tail(rsi.vals,1)
   if (real.start < 1) {
@@ -56,6 +58,20 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   
   gg <- t.coin$gg#[(real.start:end_idx),]
   
+  if (windowing > 1) {
+    new.gg <- data.frame(matrix(0, ncol=0, nrow=floor(nrow(gg)/windowing)))
+    for (i in colnames(gg)) {
+      if (i == "label") {
+        next
+      }
+      else {
+        new.gg[,i] <- rollapply(gg[,i], windowing, mean, by=windowing)
+      }
+    }
+    new.gg[,"label"] <- rollapply(gg[,"label"], windowing, max, by=windowing)
+  }  
+  gg <- new.gg[windowing:nrow(new.gg),]  
+  
   #Aroon of price
   aroons <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   #Aroon of rvrp
@@ -67,6 +83,28 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   # MACD of rvrp
   macdvp <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
   rsis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  
+  
+  # ALL THE EXTRA TTR STUFF
+  adxs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  atrs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  bbandss <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))	
+  ccis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  chaikinads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  chaikinvs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  cmfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  cmos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  dvis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  ksts <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  sars <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  stochs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  tdis <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  uos <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  vhfs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  wads <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  wprs <- data.frame(matrix(0, nrow=nrow(gg), ncol=length(rsi.vals)))
+  
+  
   rvrp <- rvrp.fun(gg, win.size=rvrp.length)
   
   for (i in 1:length(rsi.vals)) {
@@ -92,10 +130,30 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
       macdvp[,i] <- MACD(rvrp, nSlow=v, nFast=floor(v/2), nSig=floor(v/3))[,2]
     }
     rsis[,i] <- RSI(gg$price, n=floor(v/2))
+    
+    # ADD EVERYTHING FROM TTR
+    adxs[,i] <- ADX(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,4]
+    atrs[,i] <- ATR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))[,2]
+    ccis[,i] <- CCI(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    chaikinads[,i] <- chaikinAD(cbind(gg$high, gg$low, gg$close), gg$volume_from)
+    chaikinvs[,i] <- chaikinVolatility(cbind(gg$high, gg$low), n=floor(v/30))
+    cmfs[,i] <- CMF(cbind(gg$high, gg$low, gg$close), gg$volume_from, n=floor(v/30))
+    cmos[,i] <- CMO(cbind(gg$price), n=floor(v/30))
+    cmos[,i][is.na(cmos[,i])] <- 0
+    dvis[,i] <- DVI(cbind(gg$price), n=floor(v/30))[,2]
+    ksts[,i] <- KST(cbind(gg$price))[,2]
+    sars[,i] <- SAR(cbind(gg$high, gg$low))
+    stochs[,i] <- SMI(cbind(gg$high, gg$low, gg$close), n=floor(v/4), nFast=floor(v/20), nSlow=floor(v/2))[,2]
+    tdis[,i] <- TDI(cbind(gg$price), n=floor(v/30))[,1]
+    uos[,i] <- ultimateOscillator(cbind(gg$high, gg$low, gg$close))
+    uos[,i][is.na(uos[,i])] <- 0
+    vhfs[,i] <- VHF(gg$price, n=floor(v/30))
+    wprs[,i] <- WPR(cbind(gg$high, gg$low, gg$close), n=floor(v/30))
+    
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
-  idx <- (tail(rsi.vals,1)*2+10):(nrow(gg))
+  idx <- floor(tail(rsi.vals,1)*1.5+10):(nrow(gg))
   # 
   # aroons <- rowSums(aroons)
   # aroonvp  <- rowSums(aroonvp)
@@ -113,12 +171,37 @@ convert.for.lstm <- function(t.coin, rvrp.length) {
   names(macdv) <- paste("macdv.", rsi.vals, sep="")
   names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
   names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  names(rvrp) <- paste("rvrp.", rsi.vals, sep="")
+  names(rvrp2) <- paste("rvrp2.", rsi.vals, sep="")
+  names(rvrp3) <- paste("rvrp3.", rsi.vals, sep="")
+  names(rvrp4) <- paste("rvrp4.", rsi.vals, sep="")
+  names(adxs) <- paste("adxs.", rsi.vals, sep="")
+  names(atrs) <- paste("atrs.", rsi.vals, sep="")
+  names(ccis) <- paste("ccis.", rsi.vals, sep="")
+  names(chaikinads) <- paste("chaikinads.", rsi.vals, sep="")
+  names(chaikinvs) <- paste("chaikinvs.", rsi.vals, sep="")
+  names(cmfs) <- paste("cmfs.", rsi.vals, sep="")
+  names(cmos) <- paste("cmos.", rsi.vals, sep="")
+  names(dvis) <- paste("dvis.", rsi.vals, sep="")
+  names(ksts) <- paste("ksts.", rsi.vals, sep="")
+  names(sars) <- paste("sars.", rsi.vals, sep="")
+  names(stochs) <- paste("stochs.", rsi.vals, sep="")
+  names(tdis) <- paste("tdis.", rsi.vals, sep="")
+  names(uos) <- paste("uos.", rsi.vals, sep="")
+  names(vhfs) <- paste("vhfs.", rsi.vals, sep="")
+  names(wprs) <- paste("wprs.", rsi.vals, sep="")
   
-  #d = data.frame(t.coin$gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
-  # NEW VERSION: Trying to take the end of all of this data
-  # MAJOR ERROR: used to be t.coin$gg[idx,], as above. That would copy the WRONG gg values alongside the aroons! 
-  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], rsis[idx,])
-
+  d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], 
+                 aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], 
+                 rsis[idx,], adxs[idx,], atrs[idx,], ccis[idx,], chaikinads[idx,], chaikinvs[idx,], cmfs[idx,], cmos[idx,], dvis[idx,], 
+                 ksts[idx,], sars[idx,], stochs[idx,], tdis[idx,], uos[idx,], vhfs[idx,], wprs[idx,]) 
+  
+  # HACK: Get rid of all NAs so we don't screw stuff up in python
+  # Brute force
+  d[is.na(d)] <- -1
+  for (m in 1:ncol(d)) {
+    d[is.infinite(d[,m]),m] <- -1
+  }
   return(d)
 }
 
@@ -146,15 +229,12 @@ times <- list()
 for (t.coin in coins) {
   print(paste("Writing csv for", t.coin$coin))
   
-  res <- convert.for.lstm(t.coin, rvrp.length)
-  if (!("label" == names(res)[13])) {
-    print("skipping") 
-    next
-  }
+  res <- convert.for.lstm(t.coin, rvrp.length, windowing)
+  label.col <- which(colnames(res)=="label") 
   times[[t.coin$coin]] <- res$time
   
   # put label last
-  res <- res[,c(setdiff(1:ncol(res),13), 13)]
+  res <- res[,c(setdiff(1:ncol(res),label.col), label.col)]
   
   t1 <- btc2$time
   t2 <- res$time
@@ -164,15 +244,15 @@ for (t.coin in coins) {
   }
   
   # Drop time, ttc.24 and ttp
-  res <- res[,-c(1,11,12)]
+  res <- res[, !(colnames(res) %in% c("time", "ttc.24", "ttp"))]
   res <- cbind(btc2[mm[!is.na(mm)], ], res[!is.na(mm),])
   names(res)[c(1,2,3)] <- c("time", "btc.price", "btc.vol")
   
   res2 <- apply(res[,-c(1)], 2, diff)
+  colnames(res2) <- paste("d.", colnames(res2), sep="")
   res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-c(ncol(res2))], res[2:nrow(res),ncol(res)])
   names(res)[ncol(res)] <- "label"
 
-  
   write.csv(res, file=paste(root_path,t.coin$coin, filename, sep=""), row.names=F)
 }
 
