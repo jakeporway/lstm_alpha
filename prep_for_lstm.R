@@ -56,7 +56,6 @@ rvrp.length <- 1440
 
 windowing <- 5
 
-
 convert.only.one.feature <- function(t.coin, rvrp.length) {
   
   real.start <- tail(rsi.vals,1)
@@ -237,12 +236,9 @@ convert.for.lstm <- function(t.coin, rvrp.length, windowing=1) {
   pgrt.scan <- 3500
   
   gg <- t.coin$gg#[(real.start:end_idx),]
-  
-  
-  
-  
+
   if (windowing > 1) {
-    new.gg <- data.frame(matrix(0, ncol=ncol(gg), nrow=floor(nrow(gg)/windowing)))
+    new.gg <- data.frame(matrix(0, ncol=0, nrow=floor(nrow(gg)/windowing)))
     for (i in colnames(gg)) {
       if (i == "label") {
         next
@@ -336,7 +332,7 @@ convert.for.lstm <- function(t.coin, rvrp.length, windowing=1) {
   }
   
   # Values to ignore (NAs in the beginning, 0 labels at the end)
-  idx <- (tail(rsi.vals,1)*2+10):(nrow(gg))
+  idx <- floor(tail(rsi.vals,1)*1.5+10):(nrow(gg))
   # 
   # aroons <- rowSums(aroons)
   # aroonvp  <- rowSums(aroonvp)
@@ -354,6 +350,25 @@ convert.for.lstm <- function(t.coin, rvrp.length, windowing=1) {
   names(macdv) <- paste("macdv.", rsi.vals, sep="")
   names(macdvp) <- paste("macdvp.", rsi.vals, sep="")
   names(rsis) <- paste("rsis.", rsi.vals, sep="")
+  names(rvrp) <- paste("rvrp.", rsi.vals, sep="")
+  names(rvrp2) <- paste("rvrp2.", rsi.vals, sep="")
+  names(rvrp3) <- paste("rvrp3.", rsi.vals, sep="")
+  names(rvrp4) <- paste("rvrp4.", rsi.vals, sep="")
+  names(adxs) <- paste("adxs.", rsi.vals, sep="")
+  names(atrs) <- paste("atrs.", rsi.vals, sep="")
+  names(ccis) <- paste("ccis.", rsi.vals, sep="")
+  names(chaikinads) <- paste("chaikinads.", rsi.vals, sep="")
+  names(chaikinvs) <- paste("chaikinvs.", rsi.vals, sep="")
+  names(cmfs) <- paste("cmfs.", rsi.vals, sep="")
+  names(cmos) <- paste("cmos.", rsi.vals, sep="")
+  names(dvis) <- paste("dvis.", rsi.vals, sep="")
+  names(ksts) <- paste("ksts.", rsi.vals, sep="")
+  names(sars) <- paste("sars.", rsi.vals, sep="")
+  names(stochs) <- paste("stochs.", rsi.vals, sep="")
+  names(tdis) <- paste("tdis.", rsi.vals, sep="")
+  names(uos) <- paste("uos.", rsi.vals, sep="")
+  names(vhfs) <- paste("vhfs.", rsi.vals, sep="")
+  names(wprs) <- paste("wprs.", rsi.vals, sep="")
   
   d = data.frame(gg[idx,], rvrp[idx], rvrp2[idx], rvrp3[idx], rvrp4[idx], 
       		 aroons[idx,], aroonvp[idx,], macds[idx,], macdv[idx,], macdvp[idx,], 
@@ -382,6 +397,7 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
   btc2 <- btc[,c("time", "price", "volume_to")]
   
   # ADDING THIS TO MAKE UP FOR GARBAGE DATA
+  # Should be none now, hopefully...
   bad.data <- btc2$price==0
   btc2 <- btc2[!bad.data,]
 
@@ -410,6 +426,7 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
 
     res <- convert.for.lstm(t.coin, rvrp.length, windowing)
     #res <- convert.only.one.feature(t.coin, rvrp.length)
+    
     label.col <- which(colnames(res)=="label")
     times[[t.coin$coin]] <- res$time
     
@@ -424,13 +441,14 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
     }
     
     # Drop time, ttc.24 and ttp
-    res <- res[,-c(1,11,12)]
+    res <- res[, !(colnames(res) %in% c("time", "ttc.24", "ttp"))]
     res <- cbind(btc2[mm[!is.na(mm)], -c(1)], res[!is.na(mm),])
     names(res)[c(1,2)] <- c("btc.price", "btc.vol")
     
     # 6/18 taking out the diffs for right now
     # Add diffs of all variables too
      res2 <- apply(res, 2, diff)
+     colnames(res2) <- paste("d.", colnames(res2), sep="")
      res <- cbind(res[2:nrow(res),-ncol(res)], res2[,-ncol(res2)], res[2:nrow(res),ncol(res)])
      names(res)[ncol(res)] <- "label"
     
