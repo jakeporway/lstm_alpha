@@ -18,6 +18,7 @@ mar.times <- c(1519874760, 1522574760)
 apr.times <- c(1522574760, 1525174760)
 may.times <- c(1525174760, 1527811200)
 june.times <- c(1527811200, 1530403200)
+july.times <- c(1530403200, 1533081600)
 
 batch_list = list(
 
@@ -34,7 +35,7 @@ batch_list = list(
     root_path="/home/ec2-user/stocks/lstm_alpha/training_data/",
     filename="_may_jun_diff.csv",
     start.time=1525174760,
-    end.time=1529280000
+    end.time=1530403200
   )
 )
 
@@ -52,6 +53,8 @@ ttc.time = 24
 alpha = 26
 split.size = 30
 rvrp.length <- 1440
+
+windowing <- 5
 
 
 convert.only.one.feature <- function(t.coin, rvrp.length) {
@@ -405,8 +408,8 @@ output_batch_of_data <- function(coins_to_save, start.time, end.time, root_path,
        next
     }
 
-    #res <- convert.for.lstm(t.coin, rvrp.length)
-    res <- convert.only.one.feature(t.coin, rvrp.length)
+    res <- convert.for.lstm(t.coin, rvrp.length, windowing)
+    #res <- convert.only.one.feature(t.coin, rvrp.length)
     label.col <- which(colnames(res)=="label")
     times[[t.coin$coin]] <- res$time
     
