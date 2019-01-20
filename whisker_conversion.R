@@ -4,6 +4,10 @@ setwd("~/projects/stocks/lstm_alpha/training_data")
 files <- list.files(path=".", pattern="*.csv", full.names=TRUE, recursive=FALSE)
 
 for (f in files) {
+  if (length(grep("whiskers",f))&&grep("whiskers",f)==1) {
+    print(paste("File", f, "already exists. Skipping."))
+    next
+  }
   orig.data <- read.csv(f, h=T)
   print(paste("Processing", f))
   # Keep only the OHLC values
@@ -28,7 +32,7 @@ for (f in files) {
   dd <- rbind(rep(0, ncol(dd)), dd)
   colnames(dd) <- paste("d.", colnames(dd), sep="")
   # Let's shove the new values after price so we don't have to mess with the price_col
-  orig.data <- cbind(orig.data[,1:9], d[,5:9], orig.data[,10:(ncol(orig.data)-1)], dd[,5:9], orig.data$label)
+  orig.data <- cbind(orig.data[,c(1:9)], d[,5:9], orig.data[,10:(ncol(orig.data)-1)], dd[,5:9], orig.data$label)
   colnames(orig.data)[ncol(orig.data)] <- "label"
-  write.csv(orig.data, file=paste(strsplit(f, ".csv")[[1]],"2.csv", sep=""), row.names=F)
+  write.csv(orig.data, file=paste(strsplit(f, ".csv")[[1]],"_whiskers.csv", sep=""), row.names=F)
 }

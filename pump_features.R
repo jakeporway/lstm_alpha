@@ -410,11 +410,13 @@ add.ttc.pct.gain <- function(coin, pct_gain=0.2) {
 }
 
 
-add.ttc.daily.gain <- function(coin, time.span=24) {
+add.ttc.daily.gain <- function(coin, time.span=24, pct.gain=0.15, time.to.sell=7*24*2) {
   x <- coin$x
-  add.ttc.daily.gain2(x, time.span)
-  
+  L1 <- add.ttc.daily.gain2(x, time.span)
+  L2 <- add.ttc.daily.gain3(x, pct.gain, time.to.sell)
+  return(list(ttc=L1$ttc, ttp=L1$ttc, ttc2=L2$ttc, max.gain=L2$max.gain))
 }
+
 
 add.ttc.daily.gain2 <- function(x, time.span=24) {
   
@@ -449,6 +451,40 @@ add.ttc.daily.gain2 <- function(x, time.span=24) {
   } 
   
   return(list(ttc=ttc, ttp=ttp))
+}
+
+
+# We're trying something new here - set the gain to be
+# either the % we're hoping to see (say 15%) or we sell for the price
+# at X days (default 14)
+add.ttc.daily.gain3 <- function(x, pct.gain, time.to.sell) {
+  
+  max.gain <- rep(0, nrow(x))
+  ttc <- rep(0, nrow(x))
+  xp <- x$price
+  time.to.sell <- time.to.sell*60
+  # How this works:
+    # For each point:
+    # - For all points between now and time.span, find the max, mx
+    # - If the % diff between that point and start point is > pct.gain, return that value and that time
+    # - If not, compute % diff between final point and start point as pct.gain, return time.span value
+  
+  for (i in 1:(nrow(x)-time.to.sell)) {
+    idx <- i:(i+time.to.sell)
+    zz <- xp[i]*(1+pct.gain)
+    goods <- which(xp[idx] >= zz)
+    if (length(goods) > 0) {
+     mx <- xp[goods[1]+i]
+     ttcx <- goods[1]
+     p.gain <- (mx-xp[i])/xp[i]
+    } else {
+      p.gain <- (xp[i+time.to.sell]-xp[i])/xp[i]
+      ttcx <- time.to.sell
+    }
+    max.gain[i] <- p.gain
+    ttc[i] <- ttcx
+  }
+  return(list(ttc=ttc, max.gain=max.gain))
 }
 
 add.pdiff <- function(coin, lag=60) {
@@ -632,7 +668,7 @@ add.features <- function(coins) {
     #add.acf.alarm(coin, thresh=32)
     #add.pc(coin, win.size=180)
     #add.ttc(coin, pct_gain=0.2)
-    coins[[coin]]$ttc.24 <- add.ttc.daily.gain(coins[[coin]], time.span=24)
+    coins[[coin]]$ttc.24 <- add.ttc.daily.gain(coins[[coin]], time.span=24, pct.gain=0.15, time.to.sell=7*2*24)
     #add.pdiff(coin, lag=60)
     
     #TMF

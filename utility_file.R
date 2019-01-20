@@ -85,19 +85,19 @@ load.coin <- function(coin, start.time=-1, end.time=-1, features.n, btc=NULL, ma
     return(real.coin)
 }
  
-add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset) {
+add.features <- function(coins, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, pct.gain, time.to.sell) {
   print("Adding features...")
   for (coin in names(coins)) {
     print(coin)
     if (is.null(coin)) {
        next
     }
-    coins[[coin]] <- add.features.coin(coins[[coin]], win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset)
+    coins[[coin]] <- add.features.coin(coins[[coin]], win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, pct.gain, time.to.sell)
   }
  return(coins)
 }
 
-add.features.coin <- function(coin, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset) {
+add.features.coin <- function(coin, win.sizes, gain.breaks, ttc.time, alpha, split.size, subtract_offset, pct.gain, time.to.sell) {
 
     gg <- coin$gg
     
@@ -118,6 +118,9 @@ add.features.coin <- function(coin, win.sizes, gain.breaks, ttc.time, alpha, spl
     gg$ttc.24 <- ttc$ttc
     gg$ttp <- ttc$ttp
     
+    ttc2 <- add.ttc.daily.gain3(gg, pct.gain, time.to.sell)
+    gg$ttc.15.pct <- ttc2$ttc
+    gg$max.gain.after.2.weeks <- ttc2$max.gain
     
     gg <- add_labels(gg, method="ttc.24.quantiles", breaks=gain.breaks, subtract_out=subtract_offset)
   
